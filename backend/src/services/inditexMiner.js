@@ -115,7 +115,7 @@ async function mineCategory(target) {
                 }
             }
 
-            elements.forEach(el => {
+            elements.forEach((el, index) => {
                 try {
                     // TITLE
                     let title = "";
@@ -184,6 +184,8 @@ async function mineCategory(target) {
                         img = imgEl.getAttribute('data-original') || imgEl.getAttribute('src') || imgEl.getAttribute('data-src');
                     }
 
+                    console.log(`🔎 Item ${index}: Title="${title}", Price="${priceText}", URL="${url}"`);
+
                     if (url && (title || priceText)) {
                         items.push({
                             title: title || "Fırsat Ürünü",
@@ -194,8 +196,10 @@ async function mineCategory(target) {
                             source: source,
                             category: 'moda'
                         });
+                    } else {
+                        console.log(`⚠️ Skipping Item ${index}: Missing Title/Price or URL.`);
                     }
-                } catch (e) { }
+                } catch (e) { console.log(`❌ Error processing item ${index}:`, e.message); }
             });
 
             return items;
