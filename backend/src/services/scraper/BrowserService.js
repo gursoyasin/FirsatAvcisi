@@ -43,9 +43,9 @@ class BrowserService {
         console.log("Binary Path:", puppeteer.executablePath());
 
         this.browser = await puppeteer.launch({
-            headless: "new",
+            headless: true, // Force true to avoid 'new' deprecation confusion if version mismatched
             args: args,
-            executablePath: puppeteer.executablePath() // Explicitly pass it
+            executablePath: puppeteer.executablePath()
         });
 
         return this.browser;

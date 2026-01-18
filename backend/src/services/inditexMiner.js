@@ -92,21 +92,37 @@ async function mineCategory(target) {
             const items = [];
 
             // Universal Selectors for Inditex Brands
-            // Zara: .product-grid-product, li.product-grid-product
-            // Bershka: .category-product-card, .grid-card
-            // P&B: legacy-product, .c-tile--product
-            // Stradivarius: .product-item
-            const productSelector = '.category-product-card, .grid-card, .product-grid-product, li.product-grid-product, legacy-product, .c-tile--product, article.product, .product-item';
+            const productSelector = '.category-product-card, .grid-card, .product-grid-product, li.product-grid-product, legacy-product, .c-tile--product, article.product, .product-item, div[class*="product-card"], a[class*="product-link"]';
 
-            const elements = document.querySelectorAll(productSelector);
-            console.log(`🔎 Found ${elements.length} raw elements in DOM.`);
+            let elements = document.querySelectorAll(productSelector);
+            console.log(`🔎 Found ${elements.length} primary elements.`);
+
+            // FALLBACK: If specific selectors fail, try generic "Link > Image" pattern
+            if (elements.length === 0) {
+                console.log("⚠️ No products found with primary selectors. Trying fallback 'a > img'...");
+                // Look for anchors that contain an image and have a link that looks like a product
+                const potentialLinks = Array.from(document.querySelectorAll('a')).filter(a => {
+                    return (a.href.includes('-c') || a.href.includes('-p') || a.href.includes('/p/') || a.href.includes('.html')) && a.querySelector('img');
+                });
+                elements = potentialLinks;
+                console.log(`🔎 Found ${elements.length} fallback elements.`);
+
+                // DEBUG: Dump classes to understand the page structure
+                if (elements.length === 0) {
+                    const allDivs = Array.from(document.querySelectorAll('div'));
+                    const classes = allDivs.map(d => d.className).filter(c => c && typeof c === 'string').slice(0, 50).join(' | ');
+                    console.log("💀 DOM DUMP (First 50 Div Classes):", classes);
+                }
+            }
 
             elements.forEach(el => {
                 try {
                     // TITLE
                     let title = "";
-                    const titleEl = el.querySelector('.product-text, .product-description, .product-grid-product-info__name, .product-name, .product-item__name');
+                    // Try to find any text inside that is not a price
+                    const titleEl = el.querySelector('.product-text, .product-description, .product-grid-product-info__name, .product-name, .product-item__name, h2, h3, .name, .description');
                     if (titleEl) title = titleEl.innerText.trim();
+                    if (!title) title = el.innerText.split('\n')[0]; // Simple fallback
 
                     // URL
                     let url = "";
