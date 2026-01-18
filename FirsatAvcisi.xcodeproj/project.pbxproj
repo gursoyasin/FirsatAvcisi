@@ -6,11 +6,67 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		967CE6112F1BE4B100BC00C1 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6102F1BE4B100BC00C1 /* OneSignalFramework */; };
+		967CE6132F1BE4B400BC00C1 /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6122F1BE4B400BC00C1 /* OneSignalExtension */; };
+		967CE6152F1BE4B700BC00C1 /* OneSignalInAppMessages in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6142F1BE4B700BC00C1 /* OneSignalInAppMessages */; };
+		967CE6172F1BE4BA00BC00C1 /* OneSignalLocation in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6162F1BE4BA00BC00C1 /* OneSignalLocation */; };
+		967CE6232F1BECE100BC00C1 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6222F1BECE100BC00C1 /* FirebaseAnalyticsCore */; };
+		967CE6252F1BECE900BC00C1 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6242F1BECE900BC00C1 /* FirebaseAnalytics */; };
+		967CE6272F1BECEF00BC00C1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6262F1BECEF00BC00C1 /* FirebaseAuth */; };
+		967CE6292F1BECF600BC00C1 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6282F1BECF600BC00C1 /* FirebaseCore */; };
+		967CE6382F1BF17400BC00C1 /* Avci.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 967CE62E2F1BF17400BC00C1 /* Avci.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		967CE6452F1BFADD00BC00C1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 967CE6442F1BFADD00BC00C1 /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		967CE6362F1BF17400BC00C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 96D8F4BE2F1BBFBE00B39FB1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 967CE62D2F1BF17400BC00C1;
+			remoteInfo = Avci;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		967CE63D2F1BF17400BC00C1 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				967CE6382F1BF17400BC00C1 /* Avci.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		967CE62E2F1BF17400BC00C1 /* Avci.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Avci.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		96D8F4C62F1BBFBE00B39FB1 /* FirsatAvcisi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FirsatAvcisi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		967CE6392F1BF17400BC00C1 /* Exceptions for "Avci" folder in "Avci" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 967CE62D2F1BF17400BC00C1 /* Avci */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		967CE62F2F1BF17400BC00C1 /* Avci */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				967CE6392F1BF17400BC00C1 /* Exceptions for "Avci" folder in "Avci" target */,
+			);
+			path = Avci;
+			sourceTree = "<group>";
+		};
 		96D8F4C82F1BBFBE00B39FB1 /* FirsatAvcisi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FirsatAvcisi;
@@ -19,20 +75,45 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		96D8F4C32F1BBFBE00B39FB1 /* Frameworks */ = {
+		967CE62B2F1BF17400BC00C1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		96D8F4C32F1BBFBE00B39FB1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				967CE6452F1BFADD00BC00C1 /* FirebaseMessaging in Frameworks */,
+				967CE6152F1BE4B700BC00C1 /* OneSignalInAppMessages in Frameworks */,
+				967CE6112F1BE4B100BC00C1 /* OneSignalFramework in Frameworks */,
+				967CE6252F1BECE900BC00C1 /* FirebaseAnalytics in Frameworks */,
+				967CE6232F1BECE100BC00C1 /* FirebaseAnalyticsCore in Frameworks */,
+				967CE6172F1BE4BA00BC00C1 /* OneSignalLocation in Frameworks */,
+				967CE6272F1BECEF00BC00C1 /* FirebaseAuth in Frameworks */,
+				967CE6292F1BECF600BC00C1 /* FirebaseCore in Frameworks */,
+				967CE6132F1BE4B400BC00C1 /* OneSignalExtension in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		967CE60F2F1BE4B100BC00C1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		96D8F4BD2F1BBFBE00B39FB1 = {
 			isa = PBXGroup;
 			children = (
 				96D8F4C82F1BBFBE00B39FB1 /* FirsatAvcisi */,
+				967CE62F2F1BF17400BC00C1 /* Avci */,
+				967CE60F2F1BE4B100BC00C1 /* Frameworks */,
 				96D8F4C72F1BBFBE00B39FB1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				96D8F4C62F1BBFBE00B39FB1 /* FirsatAvcisi.app */,
+				967CE62E2F1BF17400BC00C1 /* Avci.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +130,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		967CE62D2F1BF17400BC00C1 /* Avci */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 967CE63A2F1BF17400BC00C1 /* Build configuration list for PBXNativeTarget "Avci" */;
+			buildPhases = (
+				967CE62A2F1BF17400BC00C1 /* Sources */,
+				967CE62B2F1BF17400BC00C1 /* Frameworks */,
+				967CE62C2F1BF17400BC00C1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				967CE62F2F1BF17400BC00C1 /* Avci */,
+			);
+			name = Avci;
+			packageProductDependencies = (
+			);
+			productName = Avci;
+			productReference = 967CE62E2F1BF17400BC00C1 /* Avci.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		96D8F4C52F1BBFBE00B39FB1 /* FirsatAvcisi */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 96D8F4D12F1BBFBF00B39FB1 /* Build configuration list for PBXNativeTarget "FirsatAvcisi" */;
@@ -55,16 +159,27 @@
 				96D8F4C22F1BBFBE00B39FB1 /* Sources */,
 				96D8F4C32F1BBFBE00B39FB1 /* Frameworks */,
 				96D8F4C42F1BBFBE00B39FB1 /* Resources */,
+				967CE63D2F1BF17400BC00C1 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				967CE6372F1BF17400BC00C1 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				96D8F4C82F1BBFBE00B39FB1 /* FirsatAvcisi */,
 			);
 			name = FirsatAvcisi;
 			packageProductDependencies = (
+				967CE6102F1BE4B100BC00C1 /* OneSignalFramework */,
+				967CE6122F1BE4B400BC00C1 /* OneSignalExtension */,
+				967CE6142F1BE4B700BC00C1 /* OneSignalInAppMessages */,
+				967CE6162F1BE4BA00BC00C1 /* OneSignalLocation */,
+				967CE6222F1BECE100BC00C1 /* FirebaseAnalyticsCore */,
+				967CE6242F1BECE900BC00C1 /* FirebaseAnalytics */,
+				967CE6262F1BECEF00BC00C1 /* FirebaseAuth */,
+				967CE6282F1BECF600BC00C1 /* FirebaseCore */,
+				967CE6442F1BFADD00BC00C1 /* FirebaseMessaging */,
 			);
 			productName = FirsatAvcisi;
 			productReference = 96D8F4C62F1BBFBE00B39FB1 /* FirsatAvcisi.app */;
@@ -80,6 +195,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					967CE62D2F1BF17400BC00C1 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
 					96D8F4C52F1BBFBE00B39FB1 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
@@ -94,17 +212,29 @@
 			);
 			mainGroup = 96D8F4BD2F1BBFBE00B39FB1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				96D8F58E2F1BE37200B39FB1 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
+				967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 96D8F4C72F1BBFBE00B39FB1 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				96D8F4C52F1BBFBE00B39FB1 /* FirsatAvcisi */,
+				967CE62D2F1BF17400BC00C1 /* Avci */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		967CE62C2F1BF17400BC00C1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		96D8F4C42F1BBFBE00B39FB1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +245,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		967CE62A2F1BF17400BC00C1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		96D8F4C22F1BBFBE00B39FB1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +261,73 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		967CE6372F1BF17400BC00C1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 967CE62D2F1BF17400BC00C1 /* Avci */;
+			targetProxy = 967CE6362F1BF17400BC00C1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		967CE63B2F1BF17400BC00C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Avci/Avci.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W99ARX626K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Avci/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Avci;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yacN.FirsatAvcisi.Avci;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		967CE63C2F1BF17400BC00C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Avci/Avci.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W99ARX626K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Avci/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Avci;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yacN.FirsatAvcisi.Avci;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		96D8F4CF2F1BBFBF00B39FB1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -251,11 +454,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FirsatAvcisi/FirsatAvcisi.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W99ARX626K;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fırsat Avcısı";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,11 +489,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FirsatAvcisi/FirsatAvcisi.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W99ARX626K;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fırsat Avcısı";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -313,6 +522,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		967CE63A2F1BF17400BC00C1 /* Build configuration list for PBXNativeTarget "Avci" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				967CE63B2F1BF17400BC00C1 /* Debug */,
+				967CE63C2F1BF17400BC00C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		96D8F4C12F1BBFBE00B39FB1 /* Build configuration list for PBXProject "FirsatAvcisi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -332,6 +550,73 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+		96D8F58E2F1BE37200B39FB1 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.16;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		967CE6102F1BE4B100BC00C1 /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 96D8F58E2F1BE37200B39FB1 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalFramework;
+		};
+		967CE6122F1BE4B400BC00C1 /* OneSignalExtension */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 96D8F58E2F1BE37200B39FB1 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalExtension;
+		};
+		967CE6142F1BE4B700BC00C1 /* OneSignalInAppMessages */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 96D8F58E2F1BE37200B39FB1 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalInAppMessages;
+		};
+		967CE6162F1BE4BA00BC00C1 /* OneSignalLocation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 96D8F58E2F1BE37200B39FB1 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalLocation;
+		};
+		967CE6222F1BECE100BC00C1 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		967CE6242F1BECE900BC00C1 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		967CE6262F1BECEF00BC00C1 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		967CE6282F1BECF600BC00C1 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		967CE6442F1BFADD00BC00C1 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 967CE61A2F1BEA7B00BC00C1 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 96D8F4BE2F1BBFBE00B39FB1 /* Project object */;
 }

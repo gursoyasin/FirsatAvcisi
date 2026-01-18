@@ -1,0 +1,401 @@
+⚠️ Firebase Service Account JSON not found in process.env. Push notifications will be disabled.
+Server is running on port 3000
+🚀 Fiyat takip motoru başlatıldı... (Her 5 dakikada bir)
+📂 Veri arşivleme süreci başlatıldı...
+2025-12-19T13:27:38.602Z tarihinden eski veriler optimize ediliyor...
+🕰️ Auto-Seeder: Online (Pool: 100+ keywords)
+Aggregation failed: PrismaClientValidationError: 
+Invalid `prisma.priceHistory.findMany()` invocation in
+/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/archive.js:41:53
+
+  38 // Önce silinecek ID'leri belirleyelim (günlük minimum olmayanlar)
+  39 // Not: SQLite'da karmaşık analitik fonksiyonlar kısıtlı olabilir.
+  40 
+→ 41 const histories = await prisma.priceHistory.findMany({
+       where: {
+         createdAt: {
+         ~~~~~~~~~
+           lt: new Date("2025-12-19T13:27:38.602Z")
+         },
+     ?   AND?: PriceHistoryWhereInput | PriceHistoryWhereInput[],
+     ?   OR?: PriceHistoryWhereInput[],
+     ?   NOT?: PriceHistoryWhereInput | PriceHistoryWhereInput[],
+     ?   id?: IntFilter | Int,
+     ?   productId?: IntFilter | Int,
+     ?   price?: FloatFilter | Float,
+     ?   checkedAt?: DateTimeFilter | DateTime,
+     ?   product?: ProductRelationFilter | ProductWhereInput
+       },
+       orderBy: {
+         createdAt: "asc"
+       }
+     })
+
+Unknown argument `createdAt`. Did you mean `checkedAt`? Available options are marked with ?.
+    at wn (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async aggregateOldHistory (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/archive.js:41:27)
+    at async runArchiving (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/archive.js:16:9) {
+  clientVersion: '5.22.0'
+}
+✅ Arşivleme başarıyla tamamlandı.
+📦 Toplam 448 ürün kontrol edilecek.
+🔍 Kontrol ediliyor: YÜN KABAN DİK YAKA
+🔍 Kontrol ediliyor: YÜN KABAN DİK YAKA
+🔍 Kontrol ediliyor: Suni deri biker ceket
+🔍 Kontrol ediliyor: Stradivarius
+🔍 Kontrol ediliyor: Apple iPhone 16 (512 GB) - Pembe
+Navigating to: https://www.amazon.com.tr/dp/B0DGJJKYFY
+Injected Inditex cookies for .zara.com
+Navigating to: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Injected Inditex cookies for .stradivarius.com
+Navigating to: https://www.stradivarius.com/tr/dip-boyamal%C4%B1-atk%C4%B1-l03906903?colorId=150&categoryId=0
+Injected Inditex cookies for .zara.com
+Navigating to: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Injected Inditex cookies for .pullandbear.com
+Navigating to: https://www.pullandbear.com/tr/suni-deri-biker-ceket-l07700358?categoryId=1030616389#colorId=700
+🌍 Global Search Request: iPhone 13
+🌍 Global Search Initiated for: "iPhone 13"
+Final URL: https://www.amazon.com.tr/dp/B0DGJJKYFY
+Final URL: https://www.pullandbear.com/tr/suni-deri-biker-ceket-l07700358?categoryId=1030616389#colorId=700
+Final URL: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Final URL: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Price found in JSON-LD (Single): 1190, InStock: false
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+Final URL: https://www.stradivarius.com/tr/dip-boyamal%C4%B1-atk%C4%B1-l03906903?colorId=150&categoryId=0
+❌ Ürün kontrol hatası (3 - Suni deri biker ceket): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 13 (128 GB) - Yıldız Işığı
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (1 - YÜN KABAN DİK YAKA): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 17 256 GB: ProMotion teknolojisine sahip 6.3 inç ekran, A19 Çip, Daha Pratik Grup Selfie’leri İçin Yeni Center Stage Ön Kamera, Çizilmelere Karşı Daha Dayanıklı; Lavanta
+❌ Ürün kontrol hatası (2 - YÜN KABAN DİK YAKA): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Arçelik 8100 MX Çamaşır Makinesi          [Enerji Sınıfı A]
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (7 - Apple iPhone 16 (512 GB) - Pembe): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Portatif Çamaşır Kurutma Makinesi - Çift Modlu Hızlı Kıyafet Kurutma, Geniş Hazneli Kurutma Torbası, Zamanlayıcılı Kapanma, Giysiler İçin Kompakt Katlanabilir Elektrikli Kurutma Makinesi, Bej          [Enerji Sınıfı A++]
+Price found in JSON-LD (Single): 490, InStock: true
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (4 - Stradivarius): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Xiaomi Smart Air Purifier Elite Beyaz Hava Temizleyici
+Navigating to: https://www.amazon.com.tr/dp/B09G9RGQ6T
+Navigating to: https://www.amazon.com.tr/dp/B0FQFBYM12
+Navigating to: https://www.amazon.com.tr/dp/B0GCBWF2DS
+Navigating to: https://www.amazon.com.tr/dp/B0DY1X3C3M
+Navigating to: https://www.cimri.com/hava-temizleme-nemlendirme-cihazlari/en-ucuz-xiaomi-smart-air-purifier-elite-beyaz-hava-temizleyici-fiyatlari,2448897941
+Final URL: https://www.cimri.com/hava-temizleme-nemlendirme-cihazlari/en-ucuz-xiaomi-smart-air-purifier-elite-beyaz-hava-temizleyici-fiyatlari,2448897941
+Final URL: https://www.amazon.com.tr/dp/B09G9RGQ6T
+Final URL: https://www.amazon.com.tr/dp/B0GCBWF2DS
+Final URL: https://www.amazon.com.tr/dp/B0DY1X3C3M
+Final URL: https://www.amazon.com.tr/dp/B0FQFBYM12
+Price found in JSON-LD (Aggregate): 17699, InStock: true
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+📊 Results - Cimri: 32, Akakçe: 42, Google: 0
+✅ Total Unique Products (Merged): 45
+❌ Ürün kontrol hatası (13 - Xiaomi Smart Air Purifier Elite Beyaz Hava Temizleyici): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 15 128GB Mavi
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+Navigating to: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-128gb-mavi-fiyatlari,2237451638
+❌ Ürün kontrol hatası (9 - Apple iPhone 17 256 GB: ProMotion teknolojisine sahip 6.3 inç ekran, A19 Çip, Daha Pratik Grup Selfie’leri İçin Yeni Center Stage Ön Kamera, Çizilmelere Karşı Daha Dayanıklı; Lavanta): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 15 256GB
+✅ Değişiklik yok: 24309.55 TL - Arçelik 8100 MX Çamaşır Makinesi          [Enerji Sınıfı A]
+✅ Değişiklik yok: 3662.28 TL - Portatif Çamaşır Kurutma Makinesi - Çift Modlu Hızlı Kıyafet Kurutma, Geniş Hazneli Kurutma Torbası, Zamanlayıcılı Kapanma, Giysiler İçin Kompakt Katlanabilir Elektrikli Kurutma Makinesi, Bej          [Enerji Sınıfı A++]
+Navigating to: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-256gb-fiyatlari,a2237452135
+✅ Değişiklik yok: 0 TL - Apple iPhone 13 (128 GB) - Yıldız Işığı
+Final URL: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-128gb-mavi-fiyatlari,2237451638
+Price found in JSON-LD (Aggregate): 47999, InStock: true
+Final URL: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-256gb-fiyatlari,a2237452135
+✅ Değişiklik yok: 47999 TL - Apple iPhone 15 128GB Mavi
+Price found in JSON-LD (Aggregate): 53904.51, InStock: true
+✅ Değişiklik yok: 53904.51 TL - Apple iPhone 15 256GB
+🔍 Kontrol ediliyor: Apple iPhone 15 512GB Yeşil
+🔍 Kontrol ediliyor: Xiaomi Mi Upany XXL Plus 7 lt Siyah Airfryer
+Navigating to: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-512gb-yesil-cep-telefonu-fiyatlari,2237458540
+🔍 Kontrol ediliyor: Xiaomi MAF05 Smart Pro 4 lt Beyaz Airfryer
+🔍 Kontrol ediliyor: Philips HD9243/90 4.1 lt Siyah Airfryer
+Final URL: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-512gb-yesil-cep-telefonu-fiyatlari,2237458540
+Navigating to: https://www.cimri.com/fritozler/en-ucuz-xiaomi-mi-upany-xxl-plus-siyah-7-lt-air-fryer-fritoz-fiyatlari,2155420588
+Price found in JSON-LD (Aggregate): 63893.84, InStock: true
+✅ Değişiklik yok: 63893.84 TL - Apple iPhone 15 512GB Yeşil
+Navigating to: https://www.cimri.com/fritozler/en-ucuz-xiaomi-maf05-smart-pro-4-lt-beyaz-air-fryer-fiyatlari,2171428287
+Navigating to: https://www.cimri.com/fritozler/en-ucuz-philips-hd924390-3000-serisi-siyah-airfryer-fiyatlari,2248725184
+Final URL: https://www.cimri.com/fritozler/en-ucuz-xiaomi-mi-upany-xxl-plus-siyah-7-lt-air-fryer-fritoz-fiyatlari,2155420588
+Price found in JSON-LD (Aggregate): 1892.15, InStock: true
+✅ Değişiklik yok: 1892.15 TL - Xiaomi Mi Upany XXL Plus 7 lt Siyah Airfryer
+Final URL: https://www.cimri.com/fritozler/en-ucuz-xiaomi-maf05-smart-pro-4-lt-beyaz-air-fryer-fiyatlari,2171428287
+Price found in JSON-LD (Aggregate): 2270.7, InStock: true
+Final URL: https://www.cimri.com/fritozler/en-ucuz-philips-hd924390-3000-serisi-siyah-airfryer-fiyatlari,2248725184
+Price found in JSON-LD (Aggregate): 2349, InStock: true
+✅ Değişiklik yok: 2270.7 TL - Xiaomi MAF05 Smart Pro 4 lt Beyaz Airfryer
+✅ Değişiklik yok: 2349 TL - Philips HD9243/90 4.1 lt Siyah Airfryer
+🔍 Kontrol ediliyor: Dyson V15 Detect Absolute Gri Şarjlı Dikey Süpürge
+Navigating to: https://www.cimri.com/sarjli-supurgeler/en-ucuz-dyson-v15-detect-absolute-kablosuz-supurge-fiyatlari,932385003
+🔍 Kontrol ediliyor: Dyson Airstrait Saç Düzleştirici
+Navigating to: https://www.cimri.com/sac-sekillendiriciler/en-ucuz-dyson-airstrait-sac-duzlestirici-fiyatlari,a2326618517
+Final URL: https://www.cimri.com/sarjli-supurgeler/en-ucuz-dyson-v15-detect-absolute-kablosuz-supurge-fiyatlari,932385003
+Price found in JSON-LD (Aggregate): 29499, InStock: true
+🔍 Kontrol ediliyor: Dyson V16 Piston Animal Şarjlı Süpürge
+🔍 Kontrol ediliyor: Sony Playstation 5 Slim 1 TB Digital Edition Oyun Konsolu + 2. Dualsense Siyah Kol
+Final URL: https://www.cimri.com/sac-sekillendiriciler/en-ucuz-dyson-airstrait-sac-duzlestirici-fiyatlari,a2326618517
+✅ Değişiklik yok: 29499 TL - Dyson V15 Detect Absolute Gri Şarjlı Dikey Süpürge
+Price found in JSON-LD (Aggregate): 15060, InStock: true
+🔍 Kontrol ediliyor: Sony Playstation 5 PRO 2TB Oyun Konsolu
+✅ Değişiklik yok: 15060 TL - Dyson Airstrait Saç Düzleştirici
+Navigating to: https://www.cimri.com/sarjli-supurgeler/en-ucuz-dyson-v16-piston-animal-sarjli-supurge-fiyatlari,2508276331
+Navigating to: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-pro-2tb-oyun-konsolu-fiyatlari,2389804611
+Navigating to: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-slim-1-tb-digital-edition-oyun-konsolu-2-dualsense-siyah-kol-fiyatlari,2341561936
+Final URL: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-pro-2tb-oyun-konsolu-fiyatlari,2389804611
+Final URL: https://www.cimri.com/sarjli-supurgeler/en-ucuz-dyson-v16-piston-animal-sarjli-supurge-fiyatlari,2508276331
+Final URL: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-slim-1-tb-digital-edition-oyun-konsolu-2-dualsense-siyah-kol-fiyatlari,2341561936
+Price found in JSON-LD (Aggregate): 42767.01, InStock: true
+Price found in JSON-LD (Aggregate): 38726.26, InStock: true
+Price found in JSON-LD (Aggregate): 29105.02, InStock: true
+✅ Değişiklik yok: 42767.01 TL - Sony Playstation 5 PRO 2TB Oyun Konsolu
+✅ Değişiklik yok: 38726.26 TL - Dyson V16 Piston Animal Şarjlı Süpürge
+✅ Değişiklik yok: 29105.02 TL - Sony Playstation 5 Slim 1 TB Digital Edition Oyun Konsolu + 2. Dualsense Siyah Kol
+🔍 Kontrol ediliyor: Sony Playstation 5 Dijital Oyun Konsolu + 2. PS5 DualSense Kol
+Navigating to: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-dijital-oyun-konsolu-2-ps5-dualsense-kol-fiyatlari,2289567873
+Final URL: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-dijital-oyun-konsolu-2-ps5-dualsense-kol-fiyatlari,2289567873
+Price found in JSON-LD (Aggregate): 28869.82, InStock: true
+✅ Değişiklik yok: 28869.82 TL - Sony Playstation 5 Dijital Oyun Konsolu + 2. PS5 DualSense Kol
+🔍 Kontrol ediliyor: Stanley Klasik Vakumlu 1.9 lt Paslanmaz Çelik Yeşil Termos
+Navigating to: https://www.cimri.com/termos/en-ucuz-stanley-klasik-vakumlu-1-9-lt-paslanmaz-celik-yesil-termos-fiyatlari,2206270181
+Final URL: https://www.cimri.com/termos/en-ucuz-stanley-klasik-vakumlu-1-9-lt-paslanmaz-celik-yesil-termos-fiyatlari,2206270181
+Price found in JSON-LD (Aggregate): 1999, InStock: true
+✅ Değişiklik yok: 1999 TL - Stanley Klasik Vakumlu 1.9 lt Paslanmaz Çelik Yeşil Termos
+🔍 Kontrol ediliyor: Stanley Quencher 1.18 lt Kırmızı Pipetli Termos
+Navigating to: https://www.cimri.com/termos/en-ucuz-stanley-quencher-1-18-lt-kirmizi-pipetli-termos-fiyatlari,2513336427
+Final URL: https://www.cimri.com/termos/en-ucuz-stanley-quencher-1-18-lt-kirmizi-pipetli-termos-fiyatlari,2513336427
+Price found in JSON-LD (Aggregate): 1304.1, InStock: true
+🔍 Kontrol ediliyor: Stanley 1.9lt Siyah Klasik Vakumlu Paslanmaz Çelik Termos
+✅ Değişiklik yok: 1304.1 TL - Stanley Quencher 1.18 lt Kırmızı Pipetli Termos
+Navigating to: https://www.cimri.com/termos/en-ucuz-stanley-1-9-lt-siyah-klasik-paslanmaz-celik-termos-fiyatlari,2012696156
+Final URL: https://www.cimri.com/termos/en-ucuz-stanley-1-9-lt-siyah-klasik-paslanmaz-celik-termos-fiyatlari,2012696156
+Price found in JSON-LD (Aggregate): 1980, InStock: true
+✅ Değişiklik yok: 1980 TL - Stanley 1.9lt Siyah Klasik Vakumlu Paslanmaz Çelik Termos
+🔍 Kontrol ediliyor: Nike AH6789-001 Air Max 270 Siyah - Beyaz Kadın Spor Ayakkabı
+Navigating to: https://www.cimri.com/spor-ayakkabi/en-ucuz-nike-air-max-270-ah6789-001-kadin-ayakkabi-fiyatlari,98768012
+🔍 Kontrol ediliyor: Nike DJ1196-100 Defy All Day Beyaz Erkek Spor Ayakkabı
+Final URL: https://www.cimri.com/spor-ayakkabi/en-ucuz-nike-air-max-270-ah6789-001-kadin-ayakkabi-fiyatlari,98768012
+Price found in JSON-LD (Aggregate): 919.91, InStock: true
+✅ Değişiklik yok: 919.91 TL - Nike AH6789-001 Air Max 270 Siyah - Beyaz Kadın Spor Ayakkabı
+Navigating to: https://www.cimri.com/spor-ayakkabi/en-ucuz-nike-dj1196-100-sneakers-defy-all-day-erkek-gunluk-spor-ayakkabi-fiyatlari,1283296362
+🔍 Kontrol ediliyor: Nike Air Monarch IV Siyah Erkek Klasik Sneaker
+Final URL: https://www.cimri.com/spor-ayakkabi/en-ucuz-nike-dj1196-100-sneakers-defy-all-day-erkek-gunluk-spor-ayakkabi-fiyatlari,1283296362
+Price found in JSON-LD (Aggregate): 2599.9, InStock: true
+✅ Değişiklik yok: 2599.9 TL - Nike DJ1196-100 Defy All Day Beyaz Erkek Spor Ayakkabı
+Navigating to: https://www.cimri.com/spor-ayakkabi/en-ucuz-nike-air-monarch-iv-siyah-erkek-klasik-sneaker-fiyatlari,2475622689
+Final URL: https://www.cimri.com/spor-ayakkabi/en-ucuz-nike-air-monarch-iv-siyah-erkek-klasik-sneaker-fiyatlari,2475622689
+Price found in JSON-LD (Aggregate): 2799, InStock: true
+🔍 Kontrol ediliyor: Adidas IF6490 Handball Spezial W Kahverengi Kadın Spor Ayakkabı
+✅ Değişiklik yok: 2799 TL - Nike Air Monarch IV Siyah Erkek Klasik Sneaker
+Navigating to: https://www.cimri.com/spor-ayakkabi/en-ucuz-adidas-if6490-handball-spezial-w-kahverengi-spor-ayakkabi-fiyatlari,2470590216
+🔍 Kontrol ediliyor: Adidas Adilette Aqua F35543 Siyah Erkek Terlik
+Final URL: https://www.cimri.com/spor-ayakkabi/en-ucuz-adidas-if6490-handball-spezial-w-kahverengi-spor-ayakkabi-fiyatlari,2470590216
+Price found in JSON-LD (Aggregate): 1466.39, InStock: true
+✅ Değişiklik yok: 1466.39 TL - Adidas IF6490 Handball Spezial W Kahverengi Kadın Spor Ayakkabı
+Navigating to: https://www.cimri.com/erkek-terlikleri-ve-sandaletleri/en-ucuz-adidas-adilette-aqua-f35543-siyah-erkek-terlik-fiyatlari,396283913
+Final URL: https://www.cimri.com/erkek-terlikleri-ve-sandaletleri/en-ucuz-adidas-adilette-aqua-f35543-siyah-erkek-terlik-fiyatlari,396283913
+Price found in JSON-LD (Aggregate): 1049, InStock: true
+✅ Değişiklik yok: 1049 TL - Adidas Adilette Aqua F35543 Siyah Erkek Terlik
+🔍 Kontrol ediliyor: Adidas EG4958 Superstar Beyaz - Siyah Unisex Spor Ayakkabı
+Navigating to: https://www.cimri.com/spor-ayakkabi/en-ucuz-adidas-adidas-superstar-50-erkek-gunluk-spor-ayakkabisi-eg4958-fiyatlari,753382996
+Final URL: https://www.cimri.com/spor-ayakkabi/en-ucuz-adidas-adidas-superstar-50-erkek-gunluk-spor-ayakkabisi-eg4958-fiyatlari,753382996
+Price found in JSON-LD (Aggregate): 1012.83, InStock: true
+✅ Değişiklik yok: 1012.83 TL - Adidas EG4958 Superstar Beyaz - Siyah Unisex Spor Ayakkabı
+🔍 Kontrol ediliyor: Samsung U8000F Televizyon
+🔍 Kontrol ediliyor: Samsung 55Q6F 55 inç 138 Ekran 4K Ultra HD Tizen QLED TV
+Navigating to: https://www.cimri.com/televizyonlar/en-ucuz-samsung-55q6f-55-inc-165-ekran-4k-ultra-hd-tizen-qled-tv-fiyatlari,2526364143
+Navigating to: https://www.cimri.com/televizyonlar/en-ucuz-samsung-u8000f-televizyon-fiyatlari,a2489892376
+Final URL: https://www.cimri.com/televizyonlar/en-ucuz-samsung-55q6f-55-inc-165-ekran-4k-ultra-hd-tizen-qled-tv-fiyatlari,2526364143
+Price found in JSON-LD (Aggregate): 33569, InStock: true
+Final URL: https://www.cimri.com/televizyonlar/en-ucuz-samsung-u8000f-televizyon-fiyatlari,a2489892376
+✅ Değişiklik yok: 33569 TL - Samsung 55Q6F 55 inç 138 Ekran 4K Ultra HD Tizen QLED TV
+Price found in JSON-LD (Aggregate): 26299, InStock: true
+✅ Değişiklik yok: 26299 TL - Samsung U8000F Televizyon
+🔍 Kontrol ediliyor: Samsung 65Q6F 65 inç 165 Ekran 4K Ultra HD Tizen QLED TV
+Navigating to: https://www.cimri.com/televizyonlar/en-ucuz-samsung-65q6f-65-inc-165-ekran-4k-ultra-hd-tizen-qled-tv-fiyatlari,2526368360
+Final URL: https://www.cimri.com/televizyonlar/en-ucuz-samsung-65q6f-65-inc-165-ekran-4k-ultra-hd-tizen-qled-tv-fiyatlari,2526368360
+Price found in JSON-LD (Aggregate): 43499, InStock: true
+✅ Değişiklik yok: 43499 TL - Samsung 65Q6F 65 inç 165 Ekran 4K Ultra HD Tizen QLED TV
+🔍 Kontrol ediliyor: Stanley 1.9lt Siyah Klasik Vakumlu Paslanmaz Çelik Termos
+🔍 Kontrol ediliyor: Stanley 2.3 lt Klasik Vakumlu Yeşil Çelik Termos
+Navigating to: https://www.cimri.com/termos/en-ucuz-stanley-1-9-lt-siyah-klasik-paslanmaz-celik-termos-fiyatlari,2012696156
+Navigating to: https://www.cimri.com/termos/en-ucuz-stanley-2-3-lt-klasik-vakumlu-celik-termos-fiyatlari,764020650
+Final URL: https://www.cimri.com/termos/en-ucuz-stanley-1-9-lt-siyah-klasik-paslanmaz-celik-termos-fiyatlari,2012696156
+Price found in JSON-LD (Aggregate): 1980, InStock: true
+✅ Değişiklik yok: 1980 TL - Stanley 1.9lt Siyah Klasik Vakumlu Paslanmaz Çelik Termos
+Final URL: https://www.cimri.com/termos/en-ucuz-stanley-2-3-lt-klasik-vakumlu-celik-termos-fiyatlari,764020650
+Price found in JSON-LD (Aggregate): 2762.32, InStock: true
+✅ Değişiklik yok: 2762.32 TL - Stanley 2.3 lt Klasik Vakumlu Yeşil Çelik Termos
+🔍 Kontrol ediliyor: Stanley Classic Legendary 1.9 lt Siyah Çelik Termos
+Navigating to: https://www.cimri.com/termos/en-ucuz-stanley-classic-legendary-1-9-lt-siyah-celik-termos-fiyatlari,1160757571
+Final URL: https://www.cimri.com/termos/en-ucuz-stanley-classic-legendary-1-9-lt-siyah-celik-termos-fiyatlari,1160757571
+Price found in JSON-LD (Aggregate): 1950, InStock: true
+✅ Değişiklik yok: 1950 TL - Stanley Classic Legendary 1.9 lt Siyah Çelik Termos
+🔍 Kontrol ediliyor: Sony Playstation 5
+Navigating to: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-fiyatlari,a1044262363
+🔍 Kontrol ediliyor: Sony Playstation 5 PS5 CD Girişli Oyun Konsolu
+🔍 Kontrol ediliyor: Apple Watch SE 2024 GPS 40 mm Yıldız Işığı Alüminyum Kasa Göl Yeşili Spor Loop Akı...
+Final URL: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-fiyatlari,a1044262363
+Navigating to: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-oyun-konsolu-fiyatlari,606889615
+Price found in JSON-LD (Aggregate): 24500.7, InStock: true
+✅ Değişiklik yok: 24500.7 TL - Sony Playstation 5
+Navigating to: https://www.cimri.com/akilli-saat/en-ucuz-apple-watch-se-2024-gps-40mm-yildizisigi-aluminyumkasa-golyesili-sporloop-akilli-saat-fiyatlari,2397769237
+Final URL: https://www.cimri.com/oyun-konsollari/en-ucuz-sony-playstation-5-oyun-konsolu-fiyatlari,606889615
+Price found in JSON-LD (Aggregate): 29759.04, InStock: true
+✅ Değişiklik yok: 29759.04 TL - Sony Playstation 5 PS5 CD Girişli Oyun Konsolu
+Final URL: https://www.cimri.com/akilli-saat/en-ucuz-apple-watch-se-2024-gps-40mm-yildizisigi-aluminyumkasa-golyesili-sporloop-akilli-saat-fiyatlari,2397769237
+Price found in JSON-LD (Aggregate): 9685, InStock: true
+✅ Değişiklik yok: 9685 TL - Apple Watch SE 2024 GPS 40 mm Yıldız Işığı Alüminyum Kasa Göl Yeşili Spor Loop Akı...
+🔍 Kontrol ediliyor: Apple Watch Series 8 45 mm Alüminyum Kasa Akıllı Saat
+Navigating to: https://www.cimri.com/akilli-saat/en-ucuz-apple-watch-series-8-45-mm-aluminyum-kasa-akilli-saat-fiyatlari,a2264659093
+Final URL: https://www.cimri.com/akilli-saat/en-ucuz-apple-watch-series-8-45-mm-aluminyum-kasa-akilli-saat-fiyatlari,a2264659093
+Price found in JSON-LD (Aggregate): 14999, InStock: true
+🔍 Kontrol ediliyor: Apple Watch Ultra 2 GPS + Cellular 49 mm Siyah Titanyum Kasa Koyu Yeşil Alpine Loo...
+✅ Değişiklik yok: 14999 TL - Apple Watch Series 8 45 mm Alüminyum Kasa Akıllı Saat
+Navigating to: https://www.cimri.com/akilli-saat/en-ucuz-apple-watch-ultra-2-gps-cellular-49-mm-siyah-titanyum-kasa-koyuyesil-alpineloop-akilli-saat-fiyatlari,2389301303
+Final URL: https://www.cimri.com/akilli-saat/en-ucuz-apple-watch-ultra-2-gps-cellular-49-mm-siyah-titanyum-kasa-koyuyesil-alpineloop-akilli-saat-fiyatlari,2389301303
+Price found in JSON-LD (Aggregate): 42999, InStock: true
+✅ Değişiklik yok: 42999 TL - Apple Watch Ultra 2 GPS + Cellular 49 mm Siyah Titanyum Kasa Koyu Yeşil Alpine Loo...
+🔍 Kontrol ediliyor: Acacia Jeans Color Mavi Rüya 250 ml Saç Boyası
+🔍 Kontrol ediliyor: Mavi 0042431036 Siyah Skinny Süper Dar Paça Pamuklu James Jeans Erkek Kot Pantolon
+Navigating to: https://www.cimri.com/sac-boyasi/en-ucuz-acacia-jeans-color-mavi-ruya-250-ml-sac-boyasi-fiyatlari,19699684
+Navigating to: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-mavi-0042431036-siyah-skinny-super-dar-paca-pamuklu-james-jeans-erkek-kot-pantolon-fiyatlari,2102872881
+Final URL: https://www.cimri.com/sac-boyasi/en-ucuz-acacia-jeans-color-mavi-ruya-250-ml-sac-boyasi-fiyatlari,19699684
+Price found in JSON-LD (Aggregate): 198, InStock: true
+Final URL: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-mavi-0042431036-siyah-skinny-super-dar-paca-pamuklu-james-jeans-erkek-kot-pantolon-fiyatlari,2102872881
+✅ Değişiklik yok: 198 TL - Acacia Jeans Color Mavi Rüya 250 ml Saç Boyası
+Price found in JSON-LD (Aggregate): 1687.67, InStock: true
+✅ Değişiklik yok: 1687.67 TL - Mavi 0042431036 Siyah Skinny Süper Dar Paça Pamuklu James Jeans Erkek Kot Pantolon
+🔍 Kontrol ediliyor: Colt Jeans Vega 9133-56 Mavi Yüksek Bel Rahat Paça Erkek Jeans Pantolon
+🔍 Kontrol ediliyor: HLT Jeans HLTHE001975 Açık Mavi Regular Fit Boru Paça Esnek Likralı Erkek Kot Pant...
+Navigating to: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-hlt-jeans-hlthe001975-acik-mavi-regular-fit-boru-paca-esnek-likrali-erkek-kot-pantolon-fiyatlari,2096524472
+Navigating to: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-colt-jeans-vega-9133-56-mavi-yuksek-bel-rahat-paca-erkek-jeans-pantolon-fiyatlari,2349863151
+Final URL: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-hlt-jeans-hlthe001975-acik-mavi-regular-fit-boru-paca-esnek-likrali-erkek-kot-pantolon-fiyatlari,2096524472
+Final URL: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-colt-jeans-vega-9133-56-mavi-yuksek-bel-rahat-paca-erkek-jeans-pantolon-fiyatlari,2349863151
+Price found in JSON-LD (Aggregate): 1049, InStock: true
+Price found in JSON-LD (Aggregate): 679.9, InStock: true
+✅ Değişiklik yok: 1049 TL - HLT Jeans HLTHE001975 Açık Mavi Regular Fit Boru Paça Esnek Likralı Erkek Kot Pant...
+✅ Değişiklik yok: 679.9 TL - Colt Jeans Vega 9133-56 Mavi Yüksek Bel Rahat Paça Erkek Jeans Pantolon
+🔍 Kontrol ediliyor: Twister Vegas 132-278 Mavi Yüksek Bel Rahat Paça Erkek Jeans Pantolon
+Navigating to: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-twister-vegas-132-278-mavi-yuksek-bel-rahat-paca-erkek-jeans-pantolon-fiyatlari,2363258878
+Final URL: https://www.cimri.com/erkek-jeans-kot-pantolon/en-ucuz-twister-vegas-132-278-mavi-yuksek-bel-rahat-paca-erkek-jeans-pantolon-fiyatlari,2363258878
+Price found in JSON-LD (Aggregate): 1099.88, InStock: true
+✅ Değişiklik yok: 1099.88 TL - Twister Vegas 132-278 Mavi Yüksek Bel Rahat Paça Erkek Jeans Pantolon
+🔍 Kontrol ediliyor: Philips EP5547/90 5500 Serisi Tam Otomatik Kahve Makinesi
+Navigating to: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-ep554790-5500-serisi-tam-otomatik-kahve-makinesi-fiyatlari,2347980802
+Final URL: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-ep554790-5500-serisi-tam-otomatik-kahve-makinesi-fiyatlari,2347980802
+Price found in JSON-LD (Aggregate): 24199, InStock: true
+✅ Değişiklik yok: 24199 TL - Philips EP5547/90 5500 Serisi Tam Otomatik Kahve Makinesi
+🔍 Kontrol ediliyor: Philips EP3347/90 LatteGo 3300 Serisi Tam Otomatik Espresso Kahve Makinesi
+Navigating to: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-ep334790-lattego-3300-serisi-tam-otomatik-espresso-kahve-makinesi-fiyatlari,2308329108
+Final URL: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-ep334790-lattego-3300-serisi-tam-otomatik-espresso-kahve-makinesi-fiyatlari,2308329108
+Price found in JSON-LD (Aggregate): 14449, InStock: true
+✅ Değişiklik yok: 14449 TL - Philips EP3347/90 LatteGo 3300 Serisi Tam Otomatik Espresso Kahve Makinesi
+🔍 Kontrol ediliyor: Philips EP4446/70 4400 Serisi Tam Otomatik Espresso Kahve Makinesi
+Navigating to: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-ep444670-4400-serisi-tam-otomatik-espresso-kahve-makinesi-fiyatlari,2347981150
+Final URL: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-ep444670-4400-serisi-tam-otomatik-espresso-kahve-makinesi-fiyatlari,2347981150
+🔍 Kontrol ediliyor: Philips 5400 Serisi Kahve Makinesi
+Price found in JSON-LD (Aggregate): 19199, InStock: true
+✅ Değişiklik yok: 19199 TL - Philips EP4446/70 4400 Serisi Tam Otomatik Espresso Kahve Makinesi
+Navigating to: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-5400-serisi-kahve-makinesi-fiyatlari,a2312379599
+Final URL: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-5400-serisi-kahve-makinesi-fiyatlari,a2312379599
+Price found in JSON-LD (Aggregate): 19599, InStock: true
+🔍 Kontrol ediliyor: Philips 2200 Serisi Kahve Makinesi
+✅ Değişiklik yok: 19599 TL - Philips 5400 Serisi Kahve Makinesi
+Navigating to: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-2200-serisi-kahve-makinesi-fiyatlari,a2313517472
+Final URL: https://www.cimri.com/kahve-makineleri/en-ucuz-philips-2200-serisi-kahve-makinesi-fiyatlari,a2313517472
+Price found in JSON-LD (Aggregate): 9449, InStock: true
+✅ Değişiklik yok: 9449 TL - Philips 2200 Serisi Kahve Makinesi
+🔍 Kontrol ediliyor: Rayban RB2140 901 54 Unisex Güneş Gözlüğü
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb2140-901-54-unisex-gunes-gozlugu-fiyatlari,12248360
+🔍 Kontrol ediliyor: Rayban RB3016 W0365 51 Unisex Güneş Gözlüğü
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb2140-901-54-unisex-gunes-gozlugu-fiyatlari,12248360
+Price found in JSON-LD (Aggregate): 1599, InStock: true
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb3016-w0365-51-unisex-gunes-gozlugu-fiyatlari,773719
+✅ Değişiklik yok: 1599 TL - Rayban RB2140 901 54 Unisex Güneş Gözlüğü
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb3016-w0365-51-unisex-gunes-gozlugu-fiyatlari,773719
+Price found in JSON-LD (Aggregate): 1699, InStock: true
+✅ Değişiklik yok: 1699 TL - Rayban RB3016 W0365 51 Unisex Güneş Gözlüğü
+🔍 Kontrol ediliyor: Rayban RB4187-622-8G-54 Unisex Güneş Gözlüğü
+🔍 Kontrol ediliyor: Rayban RB3447 001 50 21 145 Unisex Güneş Gözlüğü
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb4187-622-8g-54-unisex-gunes-gozlugu-fiyatlari,45277383
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb3447-001-50-21-145-unisex-gunes-gozlugu-fiyatlari,30386750
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb4187-622-8g-54-unisex-gunes-gozlugu-fiyatlari,45277383
+Price found in JSON-LD (Aggregate): 1599, InStock: true
+🔍 Kontrol ediliyor: RAYBAN RB4165 601/8G UNİSEX GÜNEŞ GÖZLÜĞÜ
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb3447-001-50-21-145-unisex-gunes-gozlugu-fiyatlari,30386750
+✅ Değişiklik yok: 1599 TL - Rayban RB4187-622-8G-54 Unisex Güneş Gözlüğü
+Price found in JSON-LD (Aggregate): 1499, InStock: true
+✅ Değişiklik yok: 1499 TL - Rayban RB3447 001 50 21 145 Unisex Güneş Gözlüğü
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb4165-6018g-unisex-gunes-gozlugu-fiyatlari,332873
+🔍 Kontrol ediliyor: Rayban RB2132-902-58 Erkek Güneş Gözlüğü
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb4165-6018g-unisex-gunes-gozlugu-fiyatlari,332873
+Price found in JSON-LD (Aggregate): 3238.8, InStock: true
+✅ Değişiklik yok: 3238.8 TL - RAYBAN RB4165 601/8G UNİSEX GÜNEŞ GÖZLÜĞÜ
+Navigating to: https://www.cimri.com/erkek-gunes-gozlukleri/en-ucuz-rayban-rb2132-902-58-erkek-gunes-gozlugu-fiyatlari,11538635
+Final URL: https://www.cimri.com/erkek-gunes-gozlukleri/en-ucuz-rayban-rb2132-902-58-erkek-gunes-gozlugu-fiyatlari,11538635
+Price found in JSON-LD (Aggregate): 5581, InStock: true
+✅ Değişiklik yok: 5581 TL - Rayban RB2132-902-58 Erkek Güneş Gözlüğü
+🔍 Kontrol ediliyor: RayBan RB2140 901/32 50 Unisex Güneş Gözlüğü
+🔍 Kontrol ediliyor: Rayban RB3025-L2823-58 Unisex Güneş Gözlüğü
+🔍 Kontrol ediliyor: Rayban RB4187 622/8G 54 Unisex Güneş Gözlüğü
+🔍 Kontrol ediliyor: Rayban Rb4179-601S9A/62 Erkek Güneş Gözlüğü
+🔍 Kontrol ediliyor: Yataş Bedding Adapt Rest 40x60x12 cm Özel Teknolojisi ile Üstün Konfor Yastık
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb2140-90132-50-unisex-gunes-gozlugu-fiyatlari,773686
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb2140-90132-50-unisex-gunes-gozlugu-fiyatlari,773686
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb3025-l2823-58-unisex-gunes-gozlugu-fiyatlari,45943311
+Price found in JSON-LD (Aggregate): 1599, InStock: true
+✅ Değişiklik yok: 1599 TL - RayBan RB2140 901/32 50 Unisex Güneş Gözlüğü
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb3025-l2823-58-unisex-gunes-gozlugu-fiyatlari,45943311
+Price found in JSON-LD (Aggregate): 3399, InStock: true
+✅ Değişiklik yok: 3399 TL - Rayban RB3025-L2823-58 Unisex Güneş Gözlüğü
+Navigating to: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb4187-6228g-54-unisex-gunes-gozlugu-fiyatlari,5571416
+Navigating to: https://www.cimri.com/erkek-gunes-gozlukleri/en-ucuz-rayban-rb4179-601s9a62-erkek-gunes-gozlugu-fiyatlari,75807610
+Navigating to: https://www.cimri.com/yastik/en-ucuz-yatas-bedding-adapt-rest-40x60x12-cm-ozel-teknolojisi-ile-ustun-konfor-yastik-fiyatlari,2532976911
+Final URL: https://www.cimri.com/unisex-gunes-gozlukleri/en-ucuz-rayban-rb4187-6228g-54-unisex-gunes-gozlugu-fiyatlari,5571416
+🔍 Kontrol ediliyor: Yataş Bedding Visco Therapy 40x60 cm Mükemmel Baş ve Boyun Desteği Yastık
+🔍 Kontrol ediliyor: Yataş Bedding Reflü Medikal Yastık
+Final URL: https://www.cimri.com/erkek-gunes-gozlukleri/en-ucuz-rayban-rb4179-601s9a62-erkek-gunes-gozlugu-fiyatlari,75807610
+Final URL: https://www.cimri.com/yastik/en-ucuz-yatas-bedding-adapt-rest-40x60x12-cm-ozel-teknolojisi-ile-ustun-konfor-yastik-fiyatlari,2532976911
+Price found in JSON-LD (Aggregate): 1599, InStock: true
+Price found in JSON-LD (Aggregate): 7998, InStock: true
+Price found in JSON-LD (Aggregate): 1499.9, InStock: true
+✅ Değişiklik yok: 1599 TL - Rayban RB4187 622/8G 54 Unisex Güneş Gözlüğü
+✅ Değişiklik yok: 1499.9 TL - Yataş Bedding Adapt Rest 40x60x12 cm Özel Teknolojisi ile Üstün Konfor Yastık
+✅ Değişiklik yok: 7998 TL - Rayban Rb4179-601S9A/62 Erkek Güneş Gözlüğü
+Navigating to: https://www.cimri.com/yastik/en-ucuz-yatas-bedding-reflu-medikal-yastik-fiyatlari,2134428462
+Navigating to: https://www.cimri.com/yastik/en-ucuz-yatas-40-x-60-cm-beyaz-bedding-visco-therapy-boyun-yastik-fiyatlari,2134428736
+Final URL: https://www.cimri.com/yastik/en-ucuz-yatas-bedding-reflu-medikal-yastik-fiyatlari,2134428462
+Final URL: https://www.cimri.com/yastik/en-ucuz-yatas-40-x-60-cm-beyaz-bedding-visco-therapy-boyun-yastik-fiyatlari,2134428736
+Price found in JSON-LD (Aggregate): 1399.9, InStock: true
+Price found in JSON-LD (Aggregate): 399.9, InStock: true
+🔍 Kontrol ediliyor: Yataş Bedding Hamile 85x135 cm Uyku Yastığı
+🔍 Kontrol ediliyor: Yataş Visco 27x17x21 cm Bacak Destek Yastığı
+✅ Değişiklik yok: 1399.9 TL - Yataş Bedding Reflü Medikal Yastık
+✅ Değişiklik yok: 399.9 TL - Yataş Bedding Visco Therapy 40x60 cm Mükemmel Baş ve Boyun Desteği Yastık

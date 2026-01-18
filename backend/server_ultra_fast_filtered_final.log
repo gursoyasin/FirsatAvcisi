@@ -1,0 +1,136 @@
+⚠️ Firebase Service Account JSON not found in process.env. Push notifications will be disabled.
+Server is running on port 3000
+🚀 Fiyat takip motoru başlatıldı... (Her 5 dakikada bir)
+📂 Veri arşivleme süreci başlatıldı...
+2025-12-19T13:28:49.852Z tarihinden eski veriler optimize ediliyor...
+🕰️ Auto-Seeder: Online (Pool: 100+ keywords)
+Aggregation failed: PrismaClientValidationError: 
+Invalid `prisma.priceHistory.findMany()` invocation in
+/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/archive.js:41:53
+
+  38 // Önce silinecek ID'leri belirleyelim (günlük minimum olmayanlar)
+  39 // Not: SQLite'da karmaşık analitik fonksiyonlar kısıtlı olabilir.
+  40 
+→ 41 const histories = await prisma.priceHistory.findMany({
+       where: {
+         createdAt: {
+         ~~~~~~~~~
+           lt: new Date("2025-12-19T13:28:49.852Z")
+         },
+     ?   AND?: PriceHistoryWhereInput | PriceHistoryWhereInput[],
+     ?   OR?: PriceHistoryWhereInput[],
+     ?   NOT?: PriceHistoryWhereInput | PriceHistoryWhereInput[],
+     ?   id?: IntFilter | Int,
+     ?   productId?: IntFilter | Int,
+     ?   price?: FloatFilter | Float,
+     ?   checkedAt?: DateTimeFilter | DateTime,
+     ?   product?: ProductRelationFilter | ProductWhereInput
+       },
+       orderBy: {
+         createdAt: "asc"
+       }
+     })
+
+Unknown argument `createdAt`. Did you mean `checkedAt`? Available options are marked with ?.
+    at wn (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/yacn/Desktop/FirsatAvcisi/backend/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async aggregateOldHistory (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/archive.js:41:27)
+    at async runArchiving (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/archive.js:16:9) {
+  clientVersion: '5.22.0'
+}
+✅ Arşivleme başarıyla tamamlandı.
+📦 Toplam 448 ürün kontrol edilecek.
+🔍 Kontrol ediliyor: YÜN KABAN DİK YAKA
+🔍 Kontrol ediliyor: YÜN KABAN DİK YAKA
+🔍 Kontrol ediliyor: Suni deri biker ceket
+🔍 Kontrol ediliyor: Stradivarius
+🔍 Kontrol ediliyor: Apple iPhone 16 (512 GB) - Pembe
+Navigating to: https://www.amazon.com.tr/dp/B0DGJJKYFY
+Injected Inditex cookies for .stradivarius.com
+Navigating to: https://www.stradivarius.com/tr/dip-boyamal%C4%B1-atk%C4%B1-l03906903?colorId=150&categoryId=0
+Injected Inditex cookies for .zara.com
+Navigating to: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Injected Inditex cookies for .pullandbear.com
+Navigating to: https://www.pullandbear.com/tr/suni-deri-biker-ceket-l07700358?categoryId=1030616389#colorId=700
+Injected Inditex cookies for .zara.com
+Navigating to: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+🌍 Global Search Request: iPhone 13
+🌍 Global Search Initiated for: "iPhone 13"
+Final URL: https://www.amazon.com.tr/dp/B0DGJJKYFY
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (7 - Apple iPhone 16 (512 GB) - Pembe): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 13 (128 GB) - Yıldız Işığı
+Final URL: https://www.stradivarius.com/tr/dip-boyamal%C4%B1-atk%C4%B1-l03906903?colorId=150&categoryId=0
+Final URL: https://www.pullandbear.com/tr/suni-deri-biker-ceket-l07700358?categoryId=1030616389#colorId=700
+Final URL: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Final URL: https://www.zara.com/tr/tr/boyunlu-uzun-yun-kaban-p02095319.html?v1=510857966
+Price found in JSON-LD (Single): 1190, InStock: false
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+Price found in JSON-LD (Single): 490, InStock: true
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (4 - Stradivarius): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 17 256 GB: ProMotion teknolojisine sahip 6.3 inç ekran, A19 Çip, Daha Pratik Grup Selfie’leri İçin Yeni Center Stage Ön Kamera, Çizilmelere Karşı Daha Dayanıklı; Lavanta
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (3 - Suni deri biker ceket): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Arçelik 8100 MX Çamaşır Makinesi          [Enerji Sınıfı A]
+❌ Ürün kontrol hatası (2 - YÜN KABAN DİK YAKA): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Portatif Çamaşır Kurutma Makinesi - Çift Modlu Hızlı Kıyafet Kurutma, Geniş Hazneli Kurutma Torbası, Zamanlayıcılı Kapanma, Giysiler İçin Kompakt Katlanabilir Elektrikli Kurutma Makinesi, Bej          [Enerji Sınıfı A++]
+❌ Ürün kontrol hatası (1 - YÜN KABAN DİK YAKA): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Xiaomi Smart Air Purifier Elite Beyaz Hava Temizleyici
+Navigating to: https://www.amazon.com.tr/dp/B09G9RGQ6T
+Navigating to: https://www.amazon.com.tr/dp/B0GCBWF2DS
+Navigating to: https://www.amazon.com.tr/dp/B0FQFBYM12
+Navigating to: https://www.amazon.com.tr/dp/B0DY1X3C3M
+Navigating to: https://www.cimri.com/hava-temizleme-nemlendirme-cihazlari/en-ucuz-xiaomi-smart-air-purifier-elite-beyaz-hava-temizleyici-fiyatlari,2448897941
+Final URL: https://www.cimri.com/hava-temizleme-nemlendirme-cihazlari/en-ucuz-xiaomi-smart-air-purifier-elite-beyaz-hava-temizleyici-fiyatlari,2448897941
+Price found in JSON-LD (Aggregate): 17699, InStock: true
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+❌ Ürün kontrol hatası (13 - Xiaomi Smart Air Purifier Elite Beyaz Hava Temizleyici): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 15 128GB Mavi
+Final URL: https://www.amazon.com.tr/dp/B0DY1X3C3M
+Final URL: https://www.amazon.com.tr/dp/B0GCBWF2DS
+Final URL: https://www.amazon.com.tr/dp/B09G9RGQ6T
+Final URL: https://www.amazon.com.tr/dp/B0FQFBYM12
+Scraping error: ReferenceError: originalPrice is not defined
+    at scrapeProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/scraper/index.js:360:28)
+    at async checkSingleProduct (/Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:54:25)
+    at async /Users/yacn/Desktop/FirsatAvcisi/backend/src/services/tracker.js:40:17
+📊 Results - Cimri: 32, Akakçe: 42, Google: 0
+✅ Total Unique Products (Merged): 45
+❌ Ürün kontrol hatası (11 - Portatif Çamaşır Kurutma Makinesi - Çift Modlu Hızlı Kıyafet Kurutma, Geniş Hazneli Kurutma Torbası, Zamanlayıcılı Kapanma, Giysiler İçin Kompakt Katlanabilir Elektrikli Kurutma Makinesi, Bej          [Enerji Sınıfı A++]): Ürün bilgileri çekilemedi: originalPrice is not defined
+🔍 Kontrol ediliyor: Apple iPhone 15 256GB
+✅ Değişiklik yok: 24309.55 TL - Arçelik 8100 MX Çamaşır Makinesi          [Enerji Sınıfı A]
+✅ Değişiklik yok: 0 TL - Apple iPhone 13 (128 GB) - Yıldız Işığı
+Navigating to: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-128gb-mavi-fiyatlari,2237451638
+Navigating to: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-256gb-fiyatlari,a2237452135
+✅ Değişiklik yok: 75399 TL - Apple iPhone 17 256 GB: ProMotion teknolojisine sahip 6.3 inç ekran, A19 Çip, Daha Pratik Grup Selfie’leri İçin Yeni Center Stage Ön Kamera, Çizilmelere Karşı Daha Dayanıklı; Lavanta
+Final URL: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-256gb-fiyatlari,a2237452135
+Final URL: https://www.cimri.com/cep-telefonlari/en-ucuz-apple-iphone-15-5g-128gb-mavi-fiyatlari,2237451638
+🔍 Kontrol ediliyor: Apple iPhone 15 512GB Yeşil
+🔍 Kontrol ediliyor: Xiaomi Mi Upany XXL Plus 7 lt Siyah Airfryer
+Price found in JSON-LD (Aggregate): 53904.51, InStock: true
+🔍 Kontrol ediliyor: Xiaomi MAF05 Smart Pro 4 lt Beyaz Airfryer
+Price found in JSON-LD (Aggregate): 47999, InStock: true
+✅ Değişiklik yok: 53904.51 TL - Apple iPhone 15 256GB

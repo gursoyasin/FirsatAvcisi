@@ -1,0 +1,89 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  url          String
+  title        String
+  imageUrl     String?
+  currentPrice Float    // SQLite doesn't support Decimal well in Prisma, Float is easier for MVP
+  originalPrice Float?  // The non-discounted market price scraped from site
+  currency     String   @default("TRY")
+  source       String   // trendyol, hepsiburada, etc.
+  targetPrice  Float?
+  deviceToken  String?  // For push notifications
+  userEmail    String   @default("anonymous") // Link to Firebase User
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  history      PriceHistory[]
+  alerts       AlertLog[]
+  collections  Collection[]
+  inStock      Boolean      @default(true)
+  category     String?      // electronics, fashion, beauty, home, etc.
+  lastPriceDropAt DateTime?
+  bestAlternativePrice Float?
+  bestAlternativeSource String?
+  discountPercentage Float?
+  isSystem     Boolean  @default(false)
+  views        Int      @default(0)
+  sellers      String?  // JSON: [{ merchant, price, url }]
+  variants     String?  // JSON: [{ title, url }]
+  
+  // Phase 5: Innovation Features
+  barcode      String?  @unique
+  aiAnalysis   String?  // JSON: { recommendation: "BUY", confidence: 0.9, reason: "..." }
+}
+
+model PriceHistory {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  price     Float
+  checkedAt DateTime @default(now())
+  
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id        Int      @id @default(autoincrement())
+  query     String
+  userEmail String   @default("anonymous")
+  searchedAt DateTime @default(now())
+}
+
+model AlertLog {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sentAt    DateTime @default(now())
+  message   String
+  type      String   @default("PRICE_DROP") // TARGET_PRICE, PERCENT_DROP
+}
+
+model Collection {
+  id         Int       @id @default(autoincrement())
+  name       String
+  userEmail  String    @default("anonymous")
+  products   Product[]
+  createdAt  DateTime  @default(now())
+  
+  // New Master Features
+  isPublic   Boolean   @default(false)
+  shareToken String?   @unique
+  type       String    @default("MANUAL") // MANUAL, SMART
+  icon       String    @default("folder")   // SF Symbol name
+  query      String?   // JSON string for smart filters
+}
+
+model Device {
+  id        Int      @id @default(autoincrement())
+  userEmail String
+  token     String   @unique
+  createdAt DateTime @default(now())
+}
