@@ -24,6 +24,21 @@ const VIP_EMAILS = [
     "keskinezgi26@outlook.com"
 ];
 
+// --- TRIGGER MINER (CLOUD) ---
+router.post('/inditex/mine', async (req, res) => {
+    try {
+        const { mineInditex } = require('../services/inditexMiner');
+        console.log("🚀 Remote Miner Triggered!");
+        // Run in background (fire and forget)
+        mineInditex().catch(err => console.error("Mining crashed:", err));
+        res.json({ message: "Inditex Miner started in background on server." });
+    } catch (error) {
+        console.error("Miner start failed:", error);
+        res.status(500).json({ error: "Failed to start miner" });
+    }
+});
+// -----------------------------
+
 // 1. Get All Products (User Specific)
 router.get('/', async (req, res) => {
     try {

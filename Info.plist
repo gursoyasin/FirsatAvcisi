@@ -22,15 +22,10 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
+
 	<key>NSCameraUsageDescription</key>
 	<string>Barkod taramak için kamera izni gerekiyor.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Local network access is needed to connect to the backend server.</string>
+
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

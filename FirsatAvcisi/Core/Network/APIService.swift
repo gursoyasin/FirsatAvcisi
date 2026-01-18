@@ -11,8 +11,8 @@ enum APIError: Error {
 
 class APIService: ObservableObject {
     static let shared = APIService()
-    // Localhost for simulator
-    private let baseURL = "http://192.168.1.5:3000/api"
+    // Production Server (Render)
+    private let baseURL = "https://firsat-avcisi-backend.onrender.com/api"
     
     private let session: URLSession = {
         let config = URLSessionConfiguration.default

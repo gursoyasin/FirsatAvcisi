@@ -247,3 +247,4 @@
 {"level":"info","message":"Server is running on port 3000","service":"firsat-avcisi-backend","timestamp":"2026-01-18 20:54:19"}
 {"level":"info","message":"POST /api/devices/register","service":"firsat-avcisi-backend","timestamp":"2026-01-18 20:56:05"}
 {"level":"info","message":"GET /api/products/trending","service":"firsat-avcisi-backend","timestamp":"2026-01-18 20:56:14"}
+{"level":"info","message":"Server is running on port 3000","service":"firsat-avcisi-backend","timestamp":"2026-01-18 22:31:56"}
