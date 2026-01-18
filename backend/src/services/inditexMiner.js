@@ -75,9 +75,9 @@ async function mineCategory(target) {
         await new Promise(r => setTimeout(r, 5000));
 
         console.log("🔄 Starting mass scroll for more products...");
-        for (let s = 0; s < 6; s++) { // Scroll 6 times
+        for (let s = 0; s < 3; s++) { // Reduced to 3 for stability on Free Tier
             await autoScroll(page);
-            console.log(`Scrolling... (${s + 1}/6)`);
+            console.log(`Scrolling... (${s + 1}/3)`);
             await new Promise(r => setTimeout(r, 2000));
         }
 
