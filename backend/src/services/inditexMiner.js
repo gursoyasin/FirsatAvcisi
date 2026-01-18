@@ -61,6 +61,9 @@ async function mineCategory(target) {
         const domain = target.url.match(/https?:\/\/(?:www\.)?([^\/]+)/)[1];
         const rootDomain = '.' + domain.split('.').slice(-2).join('.');
 
+        // DEBUG: Relay browser console to node console
+        page.on('console', msg => console.log('🌐 BROWSER LOG:', msg.text()));
+
         await page.setCookie(
             { name: 'countryCode', value: 'TR', domain: rootDomain },
             { name: 'languageCode', value: 'tr', domain: rootDomain },
@@ -69,6 +72,9 @@ async function mineCategory(target) {
 
         // 2. Navigation
         await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+        const pageTitle = await page.title();
+        console.log(`📄 Page Title: ${pageTitle}`);
 
         // 3. Scroll to load lazy content (MASS LOAD)
         console.log("Waiting 5s for initial load...");
@@ -93,6 +99,7 @@ async function mineCategory(target) {
             const productSelector = '.category-product-card, .grid-card, .product-grid-product, li.product-grid-product, legacy-product, .c-tile--product, article.product, .product-item';
 
             const elements = document.querySelectorAll(productSelector);
+            console.log(`🔎 Found ${elements.length} raw elements in DOM.`);
 
             elements.forEach(el => {
                 try {
