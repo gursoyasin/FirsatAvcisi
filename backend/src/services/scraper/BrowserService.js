@@ -39,9 +39,13 @@ class BrowserService {
             console.log(`Using Proxy: ${proxy}`);
         }
 
+        console.log("🚀 Launching Browser...");
+        console.log("Binary Path:", puppeteer.executablePath());
+
         this.browser = await puppeteer.launch({
             headless: "new",
-            args: args
+            args: args,
+            executablePath: puppeteer.executablePath() // Explicitly pass it
         });
 
         return this.browser;

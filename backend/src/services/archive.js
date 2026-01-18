@@ -40,9 +40,9 @@ async function aggregateOldHistory(olderThanDate) {
 
         const histories = await prisma.priceHistory.findMany({
             where: {
-                createdAt: { lt: olderThanDate }
+                checkedAt: { lt: olderThanDate }
             },
-            orderBy: { createdAt: 'asc' }
+            orderBy: { checkedAt: 'asc' }
         });
 
         if (histories.length === 0) return;
@@ -50,7 +50,7 @@ async function aggregateOldHistory(olderThanDate) {
         // Ürün ve Gün bazlı gruplandırma
         const groups = {};
         histories.forEach(h => {
-            const dateStr = h.createdAt.toISOString().split('T')[0];
+            const dateStr = h.checkedAt.toISOString().split('T')[0];
             const key = `${h.productId}_${dateStr}`;
             if (!groups[key] || h.price < groups[key].price) {
                 groups[key] = h;
