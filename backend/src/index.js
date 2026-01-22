@@ -88,4 +88,5 @@ startScheduler();
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`💾 DB Source: ${process.env.DATABASE_URL?.startsWith('file:') ? 'Local SQLite' : 'Remote Postgres/Cloud'}`);
 });

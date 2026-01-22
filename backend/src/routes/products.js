@@ -104,7 +104,8 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: "URL required" });
         }
 
-        const numericPrice = parseFloat(productData.price) || 0;
+        // PRIORITY: Check currentPrice from scraper or price from manual entry
+        const numericPrice = parseFloat(productData.currentPrice || productData.price) || 0;
         const rawEmail = req.headers['x-user-email'] || "anonymous";
         const userEmail = rawEmail.toLowerCase().trim();
         const isPremium = VIP_EMAILS.includes(userEmail);
@@ -114,16 +115,32 @@ router.post('/', async (req, res) => {
             if (count >= 3) return res.status(403).json({ error: "LIMIT_REACHED", message: "Ücretsiz plan limiti doldu. Premium'a geçin!" });
         }
 
-        // SANITIZE: Remove 'price' field which conflicts with Prisma schema ('currentPrice' is used)
-        delete productData.price;
+        // Upsert Logic: If this user already tracks this URL, update it.
+        const existingUserProduct = await prisma.product.findFirst({
+            where: { url: url, userEmail: userEmail }
+        });
+
+        if (existingUserProduct) {
+            const updated = await prisma.product.update({
+                where: { id: existingUserProduct.id },
+                data: {
+                    currentPrice: numericPrice,
+                    title: productData.title || existingUserProduct.title,
+                    imageUrl: productData.imageUrl || existingUserProduct.imageUrl,
+                    updatedAt: new Date()
+                }
+            });
+            return res.json(updated);
+        }
 
         const product = await prisma.product.create({
             data: {
                 ...productData,
                 currentPrice: numericPrice,
-                originalPrice: parseFloat(productData.originalPrice) || 0,
+                originalPrice: parseFloat(productData.originalPrice || productData.currentPrice) || 0,
                 targetPrice: targetPrice ? parseFloat(targetPrice) : null,
                 userEmail: userEmail,
+                isSystem: false, // Ensure it's marked as a user product
                 category: productData.category || "diger",
                 history: { create: { price: numericPrice } }
             }
