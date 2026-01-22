@@ -1,5 +1,6 @@
 const prisma = require('../config/db');
 const { detectGender } = require('./scraper/index');
+const browserService = require('./scraper/BrowserService');
 
 // ==========================================
 // 🎯 TARGET MAP (30+ BRANDS)
