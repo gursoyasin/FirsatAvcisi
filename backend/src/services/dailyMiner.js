@@ -27,7 +27,7 @@ const TARGETS = [
     { source: "lcwaikiki", url: "https://www.lcwaikiki.com/tr-TR/TR/etiket/indirim-kadin", gender: "woman" },
     { source: "defacto", url: "https://www.defacto.com.tr/kadin-indirim", gender: "woman" },
     { source: "koton", url: "https://www.koton.com/kadin-indirim-giyim/", gender: "woman" },
-    { source: "colins", url: "https://www.colins.com.tr/kadin-indirim", gender: "woman" },
+    { source: "colins", url: "https://www.colins.com.tr/c/indirimdekiler-1284?specs=74", gender: "woman" },
     { source: "mavi", url: "https://www.mavi.com/kadin/indirim/c/1", gender: "woman" },
     { source: "loft", url: "https://www.loft.com.tr/kadin-outlet", gender: "woman" },
 
@@ -223,7 +223,7 @@ async function mineCategory(target) {
                     // Fallback: Check raw text for price pattern
                     if (!priceText) {
                         const raw = card.innerText;
-                        const match = raw.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY|TR)/i) || raw.match(/(?:TL|TRY|TR)\s*(\d{1,3}(?:[.,]\d{3})*)/i);
+                        const match = raw.match(/(\d{1,3}(?:\s?\d{3})*(?:[.,]\d+)?)\s*(?:TL|TRY|TR)/i) || raw.match(/(?:TL|TRY|TR)\s*(\d{1,3}(?:\s?\d{3})*(?:[.,]\d+)?)/i);
                         if (match) priceText = match[1] || match[0];
                     }
 
@@ -233,7 +233,7 @@ async function mineCategory(target) {
                     if (link && priceText) {
                         // Robust Price Cleaning
                         let cleanPrice = 0;
-                        const pClean = priceText.replace(/[^\d.,]/g, '').trim();
+                        const pClean = priceText.replace(/[^\d.,]/g, '').replace(/\s/g, '').trim();
                         if (pClean.includes(',') && pClean.includes('.')) {
                             // TR Format: 1.250,90
                             if (pClean.lastIndexOf(',') > pClean.lastIndexOf('.')) {
@@ -273,12 +273,12 @@ async function mineCategory(target) {
                         const shadowCards = host.shadowRoot.querySelectorAll('.product-card, .product-item, .grid-product, [class*="product-card"]');
                         shadowCards.forEach(sCard => {
                             const sLink = sCard.querySelector('a')?.href || sCard.closest('a')?.href;
-                            const sPrice = sCard.innerText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY|TR)/i)?.[0];
+                            const sPrice = sCard.innerText.match(/(\d{1,3}(?:\s?\d{3})*(?:[.,]\d+)?)\s*(?:TL|TRY|TR)/i)?.[0];
                             if (sLink && sPrice) {
                                 results.push({
                                     title: sCard.innerText.split('\n')[0] || "Shadow Ürünü",
                                     url: sLink,
-                                    price: parseFloat(sPrice.replace(/[^\d.,]/g, '').replace(/\./g, '').replace(',', '.')) || 0,
+                                    price: parseFloat(sPrice.replace(/[^\d.,]/g, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0,
                                     imageUrl: getBestImage(sCard),
                                     source: source
                                 });
@@ -300,11 +300,11 @@ async function mineCategory(target) {
                     let link = el.tagName === 'A' ? el.href : (el.querySelector('a')?.href || el.closest('a')?.href);
                     if (!link || link.includes('javascript:')) return;
 
-                    let rawPrice = el.innerText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY|TR)/i)?.[0];
-                    if (!rawPrice) rawPrice = el.innerText.match(/(?:TL|TRY|TR)\s*(\d{1,3}(?:[.,]\d{3})*)/i)?.[0];
+                    let rawPrice = el.innerText.match(/(\d{1,3}(?:\s?\d{3})*(?:[.,]\d+)?)\s*(?:TL|TRY|TR)/i)?.[0];
+                    if (!rawPrice) rawPrice = el.innerText.match(/(?:TL|TRY|TR)\s*(\d{1,3}(?:\s?\d{3})*(?:[.,]\d+)?)/i)?.[0];
 
                     if (link && rawPrice) {
-                        let cleanPrice = parseFloat(rawPrice.replace(/[^\d.,]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+                        let cleanPrice = parseFloat(rawPrice.replace(/[^\d.,]/g, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
                         if (cleanPrice > 10) {
                             results.push({
                                 title: el.innerText.split('\n')[0] || "Fırsat Ürünü",
