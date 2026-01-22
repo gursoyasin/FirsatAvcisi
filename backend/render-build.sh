@@ -47,6 +47,12 @@ apt-get install -y wget gnupg \
     xdg-utils \
     wget
 
-# If using a specific Chrome setup script, call it here.
-# But often 'puppeteer' postinstall script handles the binary download.
-# We just need the shared libs above.
+# Install Chrome for Puppeteer explicitly
+echo "Installing Chrome for Puppeteer..."
+npx puppeteer browsers install chrome
+
+# Generate Prisma Client
+echo "Generating Prisma Client..."
+npx prisma generate
+
+echo "Build script completed successfully!"
