@@ -43,12 +43,15 @@ router.post('/inditex/mine', async (req, res) => {
 // 1. Get All Products (User Specific)
 router.get('/', async (req, res) => {
     try {
-        const userEmail = req.headers['x-user-email'];
+        let userEmail = req.headers['x-user-email'];
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
         const skip = (page - 1) * limit;
 
         if (!userEmail) return res.status(400).json({ error: "User email header missing" });
+
+        userEmail = userEmail.toLowerCase().trim();
+        console.log(`🔍 Fetching products for: ${userEmail}`);
 
         const [products, total] = await Promise.all([
             prisma.product.findMany({
@@ -102,7 +105,8 @@ router.post('/', async (req, res) => {
         }
 
         const numericPrice = parseFloat(productData.price) || 0;
-        const userEmail = req.headers['x-user-email'] || "anonymous";
+        const rawEmail = req.headers['x-user-email'] || "anonymous";
+        const userEmail = rawEmail.toLowerCase().trim();
         const isPremium = VIP_EMAILS.includes(userEmail);
 
         if (!isPremium) {
