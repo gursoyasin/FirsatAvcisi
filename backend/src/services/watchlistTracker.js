@@ -34,14 +34,23 @@ async function checkWatchlistPrices(forProUsers) {
             where: { isSystem: false }
         });
 
+        console.log(`📊 Total User Products in DB: ${allUserProducts.length}`);
+
+        const normalizedVips = VIP_EMAILS.map(e => e.toLowerCase().trim());
+
         // Filter based on VIP emails
         const productsToCheck = allUserProducts.filter(p => {
-            const isOwnerVIP = VIP_EMAILS.includes(p.userEmail?.toLowerCase().trim());
+            if (!p.userEmail) return false;
+            const email = p.userEmail.toLowerCase().trim();
+            const isOwnerVIP = normalizedVips.includes(email);
             return forProUsers ? isOwnerVIP : !isOwnerVIP;
         });
 
         if (productsToCheck.length === 0) {
-            console.log(`ℹ️ No products found for ${forProUsers ? 'PRO' : 'FREE'} tier.`);
+            console.log(`ℹ️ No products found for ${forProUsers ? 'PRO' : 'FREE'} tier. (Checked ${allUserProducts.length} total user products)`);
+            if (allUserProducts.length > 0) {
+                console.log(`🔍 Sample User Emails in DB: ${allUserProducts.slice(0, 3).map(p => p.userEmail).join(', ')}`);
+            }
             return;
         }
 
