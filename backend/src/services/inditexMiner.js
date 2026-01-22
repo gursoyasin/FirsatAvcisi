@@ -279,6 +279,15 @@ async function mineCategory(target) {
 
         console.log(`✨ Found ${products.length} products for ${target.source}. Saving...`);
 
+        // DEBUG: If 0 products, snapshot the HTML to see what's wrong
+        if (products.length === 0) {
+            const bodyPreview = await page.evaluate(() => {
+                return document.body.innerText.substring(0, 1000).replace(/\n/g, ' ') + ' || HTML: ' + document.body.innerHTML.substring(0, 500);
+            });
+            console.log(`⚠️ ZERO PRODUCTS DEBUG (Snapshot): ${bodyPreview}`);
+        }
+
+
         // 5. Save / Upsert to DB
         let savedCount = 0;
         for (const p of products) {
