@@ -112,14 +112,14 @@ async function mineCategory(target) {
                     return (a.href.includes('-c') || a.href.includes('-p') || a.href.includes('/p/') || a.href.includes('.html')) && a.querySelector('img');
                 });
                 elements = potentialLinks;
-                console.log(`🔎 Found ${elements.length} fallback elements.`);
+                console.log(`🔎 Found ${elements.length} fallback elements via Link+Image heuristic.`);
+            }
 
-                // DEBUG: Dump classes to understand the page structure
-                if (elements.length === 0) {
-                    const allDivs = Array.from(document.querySelectorAll('div'));
-                    const classes = allDivs.map(d => d.className).filter(c => c && typeof c === 'string').slice(0, 50).join(' | ');
-                    console.log("💀 DOM DUMP (First 50 Div Classes):", classes);
-                }
+            // SUPER FALLBACK: If still 0, grab ANYTHING that looks like a product card
+            if (elements.length === 0) {
+                console.log("⚠️ SUPER FALLBACK: Trying generic class matching...");
+                elements = document.querySelectorAll('div[class*="product"], li[class*="product"], article, div[data-id]');
+                console.log(`🔎 Found ${elements.length} generic elements.`);
             }
 
             elements.forEach((el, index) => {
