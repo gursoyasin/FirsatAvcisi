@@ -87,14 +87,14 @@ async function mineCategory(target) {
         // We pass this into the browser context so the evaluator knows exactly what to look for
         const MINER_CONFIGS = {
             // Inditex (Zara requires .product-grid-product, but sometimes it is just li)
-            'zara': { container: '.product-grid-product, li.product-item, .product-item, .product-grid-item', price: ['.price-current__amount', '.money-amount__main', '.price-current'] },
-            'bershka': { container: 'div[data-id], .product-card, .grid-card, .product-item', price: ['.current-price-elem', '.product-price', '.price-current'] },
-            'pullandbear': { container: '.product-card, div.grid-product, div[data-id], .product-item', price: ['.price-current', '.product-price', '.current-price'] },
-            'stradivarius': { container: '.product-item, div[name="product-item"]', price: ['.price-current', '.product-price'] },
-            'massimodutti': { container: '.product-item, .product-card', price: ['.product-price', '.price-current'] },
-            'oysho': { container: '.product-item, .grid-element, .product-card', price: ['.price-current', '.product-price'] },
-            'zarahome': { container: '.product-item, .grid-item', price: ['.price-current', '.product-price'] },
-            'lefties': { container: '.product-item, .product-card', price: ['.price-current', '.product-price'] },
+            'zara': { container: '.product-grid-product, li.product-item, .product-item, .product-grid-item, .product-grid-product-info', price: ['.price__amount--current', '.price-current__amount', '.money-amount__main', '.price-current'] },
+            'bershka': { container: 'div[data-id], .product-card, .grid-card, .product-item, .grid-product, .category-product-card', price: ['.current-price-elem', '.product-price', '.price-current', '.price-elem'] },
+            'pullandbear': { container: '.product-card, div.grid-product, div[data-id], .product-item, .grid-product-info', price: ['.price-current', '.product-price', '.current-price', '.price-elem'] },
+            'stradivarius': { container: '.product-item, div[name="product-item"], .grid-product', price: ['.price-current', '.product-price', '.price-elem'] },
+            'massimodutti': { container: '.product-item, .product-card, .grid-product', price: ['.product-price', '.price-current', '.price-elem'] },
+            'oysho': { container: '.product-item, .grid-element, .product-card', price: ['.price-current', '.product-price', '.price-elem'] },
+            'zarahome': { container: '.product-item, .grid-item', price: ['.price-current', '.product-price', '.price-elem'] },
+            'lefties': { container: '.product-item, .product-card', price: ['.price-current', '.product-price', '.price-elem'] },
 
             // Global
             'hm': { container: 'article.hm-product-item, .product-item, li.product-item, .hm-product-item', price: ['.price-value', '.item-price'] },
@@ -264,25 +264,44 @@ async function mineCategory(target) {
 
             // --- GENERIC FALLBACK (IF 0 ITEMS) ---
             if (results.length === 0) {
-                console.log("⚠️ Zero items with config. Trying generic fallback...");
-                const genericSelector = 'a[href*="/p/"], a[href*="-p"], .product-card, .product-item, .grid-item, li.product-item, div[class*="product"]';
+                console.log("⚠️ Zero items with config. Trying generic fallback + heuristics...");
+
+                // 1. SHADOW DOM SCAN (P&B / Stradivarius often hide content here)
+                try {
+                    const allCustomElements = Array.from(document.querySelectorAll('*')).filter(el => el.shadowRoot);
+                    allCustomElements.forEach(host => {
+                        const shadowCards = host.shadowRoot.querySelectorAll('.product-card, .product-item, .grid-product, [class*="product-card"]');
+                        shadowCards.forEach(sCard => {
+                            const sLink = sCard.querySelector('a')?.href || sCard.closest('a')?.href;
+                            const sPrice = sCard.innerText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY|TR)/i)?.[0];
+                            if (sLink && sPrice) {
+                                results.push({
+                                    title: sCard.innerText.split('\n')[0] || "Shadow Ürünü",
+                                    url: sLink,
+                                    price: parseFloat(sPrice.replace(/[^\d.,]/g, '').replace(/\./g, '').replace(',', '.')) || 0,
+                                    imageUrl: getBestImage(sCard),
+                                    source: source
+                                });
+                            }
+                        });
+                    });
+                } catch (e) { console.log("Shadow DOM Scan Error:", e.message); }
+
+                // 2. TEXT-BASED HEURISTIC SCAN
+                const genericSelector = 'a[href*="/p/"], a[href*="-p"], .product-card, .product-item, .grid-item, li.product-item, div[class*="product"], .grid-product';
                 let elements = Array.from(document.querySelectorAll(genericSelector));
 
-                // Skeleton Filter again
                 elements = elements.filter(c => {
                     const cls = c.className || "";
                     return !cls.includes('skeleton') && !cls.includes('loading');
                 });
 
                 elements.forEach(el => {
-                    let link = el.tagName === 'A' ? el.href : el.querySelector('a')?.href;
-                    if (!link) link = el.closest('a')?.href;
+                    let link = el.tagName === 'A' ? el.href : (el.querySelector('a')?.href || el.closest('a')?.href);
+                    if (!link || link.includes('javascript:')) return;
 
-                    if (!link) return;
-
-                    // Look for price in the element
-                    let rawPrice = el.innerText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/i)?.[0];
-                    if (!rawPrice) rawPrice = el.innerText.match(/(?:TL|TRY)\s*(\d{1,3}(?:[.,]\d{3})*)/i)?.[0];
+                    let rawPrice = el.innerText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY|TR)/i)?.[0];
+                    if (!rawPrice) rawPrice = el.innerText.match(/(?:TL|TRY|TR)\s*(\d{1,3}(?:[.,]\d{3})*)/i)?.[0];
 
                     if (link && rawPrice) {
                         let cleanPrice = parseFloat(rawPrice.replace(/[^\d.,]/g, '').replace(/\./g, '').replace(',', '.')) || 0;

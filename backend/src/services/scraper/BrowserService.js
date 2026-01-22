@@ -55,10 +55,11 @@ class BrowserService {
         console.log("Binary Path:", puppeteer.executablePath());
 
         this.browser = await puppeteer.launch({
-            headless: true, // Force true to avoid 'new' deprecation confusion if version mismatched
+            headless: 'new',
             args: args,
             executablePath: puppeteer.executablePath(),
-            ignoreHTTPSErrors: true
+            ignoreHTTPSErrors: true,
+            protocolTimeout: 120000 // 2 minutes to prevent Network.enable timeout
         });
 
         return this.browser;
