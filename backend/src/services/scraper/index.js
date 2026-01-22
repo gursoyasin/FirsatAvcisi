@@ -1,512 +1,371 @@
 const browserService = require('./BrowserService');
 const cheerio = require('cheerio');
 
+// ==========================================
+// 🌍 EVRENSEL MARKA HARİTASI (BRAND MAP)
+// ==========================================
+// Tüm markaların CSS seçicileri ve davranış kuralları burada tanımlanır.
+// Yeni marka eklemek için sadece bu listeye ekleme yapmak yeterlidir.
+const BRAND_CONFIGS = {
+    // --- INDITEX GRUBU ---
+    'zara.com': { source: 'zara', useCookies: true, selectors: { price: ['.price-current__amount', '.money-amount__main'], originalPrice: ['.price-old__amount', '.price__amount--strikethrough'] } },
+    'bershka.com': { source: 'bershka', useCookies: true, selectors: { price: ['.current-price-elem', '.product-price', '.price-current'], originalPrice: ['.old-price-elem', '.price-old'] } },
+    'pullandbear.com': { source: 'pullandbear', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
+    'stradivarius.com': { source: 'stradivarius', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
+    'massimodutti.com': { source: 'massimodutti', useCookies: true, selectors: { price: ['.product-price', '.price-current'], originalPrice: ['.price-old'] } },
+    'oysho.com': { source: 'oysho', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
+    'zarahome.com': { source: 'zarahome', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
+    'lefties.com': { source: 'lefties', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
+
+    // --- GLOBAL MODA ---
+    'hm.com': { source: 'hm', selectors: { price: ['#product-price .price-value', '.price-value', '.item-price'], img: ['figure.pdp-image img'] } },
+    'mango.com': { source: 'mango', selectors: { price: ["span[data-testid='current-price']", '.product-price', '.text-body-m'] } },
+    'jackjones.com': { source: 'jackjones', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'] } },
+
+    // --- TÜRK DEVLERİ & PREMIUM ---
+    'lcwaikiki.com': { source: 'lcwaikiki', selectors: { title: ['h1.product-title'], price: ['.product-price', '.price', '.basket-price'] } },
+    'defacto.com.tr': { source: 'defacto', selectors: { title: ['h1.product-name'], price: ['.product-price', '.sale-price', '.product-card-price'] } },
+    'defacto.com': { source: 'defacto' },
+    'koton.com': { source: 'koton', selectors: { title: ['h1.product-name'], price: ['.product-price', '.new-price', '.price'] } },
+    'colins.com.tr': { source: 'colins', selectors: { price: ['.product-price', '.price'] } },
+    'mavi.com': { source: 'mavi', selectors: { price: ['.price', '.current-price', '.product-price'] } },
+    'loft.com.tr': { source: 'loft', selectors: { price: ['.product-price', '.price', '.current-price'] } },
+    'twist.com.tr': { source: 'twist', selectors: { price: ['.product-price', '.price'] } },
+    'ipekyol.com.tr': { source: 'ipekyol', selectors: { price: ['.product-price', '.price'] } },
+
+    // NETWORK & BOYNER GRUBU
+    'network.com.tr': {
+        source: 'network',
+        selectors: {
+            title: ['h1.product__title', '.product-details__title', '.product-name'],
+            price: ['.product__price--sale', '.product__price', '.product-price__current', '.price']
+        }
+    },
+    'fabrika.com.tr': { source: 'fabrika', selectors: { price: ['.product-price', '.price'] } },
+    'boyner.com.tr': { source: 'boyner', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'] } },
+
+    // --- LÜKS & KLASİK ---
+    'beymen.com': { source: 'beymen', selectors: { title: ['h1.o-productDetail__title'], price: ['.m-productPrice__salePrice', '.m-productPrice__price'] } },
+    'beymenclub.com': { source: 'beymenclub', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'] } },
+    'vakko.com': { source: 'vakko', selectors: { price: ['.product-price', '.price'] } },
+    'damattween.com': { source: 'damattween', selectors: { price: ['.product-price', '.price'] } },
+    'sarar.com': { source: 'sarar', selectors: { price: ['.product-price', '.price'] } },
+    'ramsey.com.tr': { source: 'ramsey', selectors: { price: ['.product-price', '.price'] } },
+
+    // --- SPOR ---
+    'nike.com': { source: 'nike', selectors: { title: ['h1#pdp_product_title'], price: ['.product-price', '.is--current-price'] } },
+    'adidas.com.tr': { source: 'adidas', selectors: { title: ['h1[data-auto-id="product-title"]'], price: ['.gl-price-item--sale', '.gl-price-item'] } },
+    'puma.com': { source: 'puma', selectors: { price: ['.price', '.product-price'] } },
+    'newbalance.com.tr': { source: 'newbalance', selectors: { price: ['.product-price', '.price'] } },
+    'underarmour.com.tr': { source: 'underarmour', selectors: { price: ['.product-price', '.price'] } },
+    'lesbenjamins.com': { source: 'lesbenjamins', selectors: { price: ['.product-price', '.price'] } },
+    'superstep.com.tr': { source: 'superstep', selectors: { price: ['.product-price', '.price'] } }
+};
+
 async function scrapeProduct(url) {
-    let page;
+    let page = null;
+    let isolatedBrowser = null;
+    let title = "";
+    let price = 0;
+    let originalPrice = 0;
+    let imageUrl = "";
+
     try {
-        page = await browserService.createPage();
+        const domain = new URL(url).hostname.replace('www.', '');
 
-        // Set extra headers to mimic real browser (Chrome 122)
-        await page.setExtraHTTPHeaders({
-            'Accept-Language': 'en-US,en;q=0.9,tr;q=0.8',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="122", "Google Chrome";v="122"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"macOS"',
-            'Upgrade-Insecure-Requests': '1'
-        });
+        // ZARA ISOLATION
+        if (domain.includes('zara')) {
+            console.log("☢️ Zara Request Dected: Launching ISOLATED Browser...");
+            const isolated = await browserService.createIsolatedPage();
+            isolatedBrowser = isolated.browser;
+            page = isolated.page;
+        } else {
+            page = await browserService.createPage();
+        }
 
-        // Desktop User-Agent (Chrome 122)
+        // BRAND CONFIG
+        let brandConfig = null;
+        for (const [key, config] of Object.entries(BRAND_CONFIGS)) {
+            if (domain.includes(key)) {
+                brandConfig = config;
+                break;
+            }
+        }
+        const source = brandConfig ? brandConfig.source : 'unknown';
+        console.log(`🌐 Scraper Hedefi: ${domain} -> Marka: ${source.toUpperCase()}`);
+
+        if (url.includes('zara.com')) {
+            // FIX: Robust ID Extraction (matches ...-p1234567.html)
+            let idMatch = url.match(/-p(\d+)\.html/);
+            if (!idMatch) idMatch = url.match(/v1=(\d+)/); // Query param fallback
+
+            if (idMatch && idMatch[1]) {
+                const cleanId = idMatch[1];
+                url = `https://www.zara.com/tr/tr/product-p${cleanId}.html`;
+                console.log(`🇹🇷 Zara TR Link Normalize Edildi: ${url}`);
+            }
+        }
+
         await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
 
-        // Inditex Cookie Injection to bypass "Select Region" / "Konum Seç"
-        if (url.includes('zara.com') || url.includes('bershka.com') || url.includes('stradivarius.com') || url.includes('pullandbear.com') || url.includes('massimodutti.com') || url.includes('oysho.com') || url.includes('zarahome.com') || url.includes('lefties.com')) {
-            const domain = url.match(/https?:\/\/(?:www\.)?([^\/]+)/)[1];
-            const rootDomain = '.' + domain.split('.').slice(-2).join('.'); // .zara.com
+        // GEO-LOCK BYPASS (The Fix for "Select Your Location")
+        await page.setExtraHTTPHeaders({
+            'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Upgrade-Insecure-Requests': '1',
+            'Referer': 'https://www.google.com/'
+        });
 
-            await page.setCookie(
-                { name: 'countryCode', value: 'TR', domain: rootDomain },
-                { name: 'languageCode', value: 'tr', domain: rootDomain },
-                { name: 'storeId', value: '11728', domain: rootDomain } // Default Inditex store ID works for most
-            );
-            console.log(`Injected Inditex cookies for ${rootDomain}`);
+        // FORCE STORE COOKIES (Inditex Defaults)
+        if (domain.includes('zara') || domain.includes('bershka') || domain.includes('pullandbear') || domain.includes('stradivarius')) {
+            try {
+                // Set "physical" store info to prevent splash screen
+                await page.setCookie(
+                    { name: 'storeId', value: '11717', domain: `.${domain}` }, // Generic TR Store
+                    { name: 'countryCode', value: 'TR', domain: `.${domain}` },
+                    { name: 'langCode', value: 'tr', domain: `.${domain}` }
+                );
+            } catch (e) { console.log("Cookie set error:", e.message); }
         }
 
-        // Universal Inditex Share Link Handling
-        let isInditexShare = false;
-        const inditexDomains = ['zara.com', 'bershka.com', 'stradivarius.com', 'pullandbear.com', 'massimodutti.com', 'oysho.com', 'zarahome.com', 'lefties.com'];
-        const matchedInditex = inditexDomains.find(d => url.includes(d));
-
-        if (matchedInditex && url.includes('/share/')) {
-            console.log("Detected Inditex Share Link. Visiting directly to allow redirect...");
-            // Do NOT convert to search. Let the share link redirect to the real product.
-            // But we flag it to ensure we wait effectively.
-            isInditexShare = true;
-        }
-        // H&M / Mango Clean
-        if (url.includes('hm.com') || url.includes('mango.com') || url.includes('amazon.')) {
-            if (url.includes('?')) url = url.split('?')[0]; // Amazon clean up
-        }
-
-        // Optimize Speed: Block Images, Fonts, Stylesheets
+        // REQUEST INTERCEPTION
         await page.setRequestInterception(true);
         page.on('request', (req) => {
-            if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
+            if (['image', 'media', 'font'].includes(req.resourceType()) && !domain.includes('zara')) {
                 req.abort();
             } else {
                 req.continue();
             }
         });
 
-        console.log(`Navigating to: ${url}`);
+        console.log(`🚀 Gidiliyor: ${url}`);
 
-        // Optimize wait: 'domcontentloaded' is faster
         try {
-            const waitOption = isInditexShare ? 'networkidle0' : 'domcontentloaded';
-            await page.goto(url, { waitUntil: waitOption, timeout: 30000 });
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 50000 });
         } catch (e) {
-            console.log("Navigation timeout (domcontentloaded), scraping whatever loaded...");
+            console.log("⚠️ Navigasyon timeout (Devam ediliyor)...");
         }
 
-        // Universal Inditex Search Grid Click
-        if (isInditexShare && url.includes('/search')) {
-            try {
-                const searchResultSelector = '.product-grid-product-info a, .product-link, li.product a, .product-grid-product, .grid-product-link';
-                // Wait briefly to see if we are on a list page
-                await page.waitForSelector(searchResultSelector, { timeout: 5000 });
-                console.log("Inditex Search Grid detected. Clicking first result...");
+        // DEBUG: Check where we landed
+        let pageTitle = await page.title();
+        console.log(`📍 Landed on Page: "${pageTitle}"`);
 
-                const firstProduct = await page.$(searchResultSelector);
-                if (firstProduct) {
-                    await Promise.all([
-                        page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-                        firstProduct.click()
-                    ]);
-                    console.log("Clicked product, new URL:", page.url());
+        // EMERGENCY: "Select Your Location" Handler
+        if (pageTitle.toLowerCase().includes('location') || pageTitle.toLowerCase().includes('select') || pageTitle.toLowerCase().includes('konum')) {
+            console.log("🚨 'Select Location' screen detected! Attempting auto-fix...");
+            try {
+                // Try multiple strategies to click "Turkey"
+                const trLink = await page.$('a[href*="/tr/tr/"]');
+                const trText = await page.$x("//a[contains(text(), 'Turkey') or contains(text(), 'Türkiye')]");
+
+                if (trLink) {
+                    console.log("🖱️ Clicking TR Link (Href)...");
+                    await Promise.all([page.waitForNavigation({ timeout: 10000 }), trLink.click()]);
+                } else if (trText.length > 0) {
+                    console.log("🖱️ Clicking TR Link (Text)...");
+                    await Promise.all([page.waitForNavigation({ timeout: 10000 }), trText[0].click()]);
                 }
+
+                // Update title after click
+                pageTitle = await page.title();
+                console.log(`📍 New Page Title: "${pageTitle}"`);
             } catch (e) {
-                console.log("No search grid detected or timeout (maybe already on product page). Proceeding...");
+                console.log("❌ Auto-fix failed:", e.message);
             }
         }
 
-        // UNIVERSAL WAIT: Ensure Product Page Content is Ready
-        // If we came from search click OR direct redirect, we must wait for the H1/Title to appear.
-        // UNIVERSAL WAIT: Ensure Product Page Content is Ready
-        // For SPAs (Zara, Trendyol, etc.), domcontentloaded is NOT enough.
-        console.log("Waiting for page content (h1)...");
+        // ROBUST WAIT (Wait for Price or Title)
         try {
             await page.waitForFunction(
-                () => document.querySelector('h1') && document.querySelector('h1').innerText.length > 0,
-                { timeout: 10000 } // 10s timeout
+                () => document.querySelector('h1') || document.querySelector('[class*="price"]'),
+                { timeout: 8000 }
             );
-        } catch (e) {
-            console.log("Warning: Content wait timed out. proceeding...");
-        }
+        } catch (e) { }
 
-        // CHECK FOR FAILED/STUCK REDIRECT (Share Link Trap)
-        if (page.url().includes('/share/')) {
-            console.log("Still on Share URL. Attempting to extract canonical URL from meta tags...");
-            try {
-                const canonical = await page.evaluate(() => {
-                    return document.querySelector("meta[property='og:url']")?.content ||
-                        document.querySelector("link[rel='canonical']")?.href ||
-                        document.querySelector("meta[property='al:web:url']")?.content;
-                });
-
-                if (canonical && !canonical.includes('/share/')) {
-                    console.log(`Found canonical URL in meta: ${canonical}. Manually navigating...`);
-                    await page.goto(canonical, { waitUntil: 'domcontentloaded', timeout: 30000 });
-                } else {
-                    console.log("Could not find better canonical URL. Trying fallback search redirect...");
-                    // Last resort: extract ID from URL hash or query if possible
-                }
-            } catch (e) {
-                console.error("Meta redirect failed:", e);
-            }
-        }
-
-        const finalUrl = page.url();
-        console.log(`Final URL: ${finalUrl}`);
-
-        // Sayfa içeriğini al
+        // --- DATA EXTRACTION ---
         const content = await page.content();
         const $ = cheerio.load(content);
 
-        let title = "";
-        let price = 0;
-        let originalPrice = 0;
-        let imageUrl = "";
-        let source = "";
-        let inStock = true; // Default assumption
-
-        // Global Generic Strategies (JSON-LD & Meta Tags)
-        // 1. Try Structured Data (JSON-LD) - Most Reliable
+        // STRATEGY 1: JSON-LD (Gold Standard)
         try {
-            const scripts = $("script[type='application/ld+json']");
-            scripts.each((i, el) => {
-                try {
-                    const data = JSON.parse($(el).html());
-                    // Check for Product schema
-                    if (data['@type'] === 'Product' || data['@context']?.includes('schema.org')) {
-                        const offers = data.offers;
-                        if (!title && data.name) title = data.name;
-                        if (!imageUrl && (data.image || data.image?.[0])) imageUrl = Array.isArray(data.image) ? data.image[0] : data.image;
-
-                        if (offers) {
-                            // Helper to check availability schema
-                            const checkAvailability = (offer) => {
-                                if (offer && offer.availability) {
-                                    const avail = offer.availability;
-                                    if (avail.includes("OutOfStock") || avail.includes("SoldOut")) return false;
-                                    if (avail.includes("InStock")) return true;
-                                }
-                                return true; // Default if unknown
-                            };
-
-                            if (offers.price) {
-                                price = parseFloat(offers.price);
-                                inStock = checkAvailability(offers);
-                                console.log(`Price found in JSON-LD (Single): ${price}, InStock: ${inStock}`);
-                                return false; // break loop
-                            }
-                            if (Array.isArray(offers) || offers.lowPrice) {
-                                price = parseFloat(offers.lowPrice || offers[0]?.price);
-                                inStock = checkAvailability(Array.isArray(offers) ? offers[0] : offers);
-                                console.log(`Price found in JSON-LD (Aggregate): ${price}, InStock: ${inStock}`);
-                                return false; // break loop
-                            }
+            $("script[type='application/ld+json']").each((i, el) => {
+                let text = $(el).html();
+                if (text) {
+                    let data = JSON.parse(text);
+                    if (Array.isArray(data)) data = data.find(item => item['@type'] === 'Product');
+                    if (data && data.name) {
+                        title = data.name;
+                        if (data.image) imageUrl = Array.isArray(data.image) ? data.image[0] : data.image;
+                        if (data.offers) {
+                            const offer = Array.isArray(data.offers) ? data.offers[0] : data.offers;
+                            price = parseFloat(offer.price || offer.lowPrice || 0);
+                            // Some sites put the high/original price in JSON-LD
+                            if (offer.highPrice) originalPrice = parseFloat(offer.highPrice);
                         }
                     }
-                } catch (e) { /* ignore parse error */ }
+                }
             });
-        } catch (e) {
-            console.log("JSON-LD parsing failed", e);
+        } catch (e) { }
+
+        // STRATEGY 2: META TAGS
+        if (!title) title = $("meta[property='og:title']").attr("content");
+        if (!imageUrl) imageUrl = $("meta[property='og:image']").attr("content");
+        if (!price) {
+            const p = $("meta[property='product:price:amount']").attr("content") || $("meta[property='og:price:amount']").attr("content");
+            if (p) price = parseFloat(p);
+        }
+        if (!originalPrice) {
+            const op = $("meta[property='product:original_price:amount']").attr("content") || $("meta[name='twitter:data1']").attr("content");
+            if (op && op.match(/\d/)) originalPrice = parsePrice(op);
         }
 
-        // 2. Try Meta Tags (if JSON-LD failed)
-        if (!price || price === 0) {
-            const metaPrice = $("meta[property='product:price:amount']").attr("content") ||
-                $("meta[property='og:price:amount']").attr("content") ||
-                $("meta[itemprop='price']").attr("content");
-            if (metaPrice) {
-                price = parseFloat(metaPrice);
-                console.log(`Price found in Meta Tag: ${price}`);
+        // STRATEGY 3: BRAND SELECTORS (Critical for Network/Beymen)
+        if (brandConfig && brandConfig.selectors) {
+            if (!title && brandConfig.selectors.title) {
+                brandConfig.selectors.title.forEach(sel => { if ($(sel).text()) title = $(sel).text().trim() });
             }
-            // Meta availability
-            const metaAvail = $("meta[property='product:availability']").attr("content") ||
-                $("meta[itemprop='availability']").attr("content");
-            if (metaAvail) {
-                if (metaAvail.includes("oos") || metaAvail.includes("out of stock") || metaAvail.includes("OutOfStock")) {
-                    inStock = false;
-                }
+            if (!price && brandConfig.selectors.price) {
+                brandConfig.selectors.price.forEach(sel => {
+                    const t = $(sel).text().trim();
+                    if (t) price = parsePrice(t);
+                });
             }
-        }
-
-        if (!title) title = $("meta[property='og:title']").attr("content") || $("h1").first().text().trim();
-        if (!imageUrl) {
-            imageUrl = $("meta[property='og:image']").attr("content") ||
-                $(".product-detail-images__image").attr("src") ||
-                $(".main-image").attr("src");
-        }
-
-        // GENERIC SEARCH RESULT CLICKER (For Barcode Lookup mostly)
-        if (title === "Ürün Başlığı Bulunamadı" || !title) {
-            console.log("Title not found. Checking if this is a search result page...");
-            // Add Zara/Inditex specific grid selectors - Prioritize Anchors
-            const genericProductSelector = 'a.product-link, .product-grid-product a, .product-item a, .grid-card a, .p-card-wrppr a, .search-item a';
-            const firstItem = await page.$(genericProductSelector);
-            if (firstItem) {
-                console.log("Found a product link in list. Clicking...");
-                await Promise.all([
-                    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 }),
-                    firstItem.click()
-                ]);
-                console.log("Navigated to product link. Scraper should be restarted for full data, but returning URL for now.");
-                // For simplicity in this iteration, we return the URL so the frontend can preview/scrape it properly
-                // OR we could simple recursively call scrapeProduct here? No, too complex for now.
-                // Let's just return the new URL as context so caller knows what happened.
-                return {
-                    title: "REDIRECT_REQUIRED",
-                    currentPrice: 0,
-                    imageUrl: "",
-                    source: "unknown",
-                    url: page.url()
-                };
+            if (!originalPrice && brandConfig.selectors.originalPrice) {
+                brandConfig.selectors.originalPrice.forEach(sel => {
+                    const t = $(sel).text().trim();
+                    if (t) originalPrice = parsePrice(t);
+                });
             }
         }
 
-
-        // Domain Specific Fallbacks & Source Detection
-        if (finalUrl.includes("trendyol.com")) {
-            source = "trendyol";
-            // Wait for selector to ensure content is loaded
-            try { await page.waitForSelector('h1', { timeout: 5000 }); } catch (e) { }
-
-            // Trendyol specific Title/Price override if generic failed
-            if (!title) title = $("h1").first().text().trim();
-            if (!price) {
-                let priceText = $(".product-price-container .prc-dsc").text().trim() ||
-                    $(".prc-dsc").text().trim() ||
-                    $(".product-price-container").text().trim() ||
-                    $(".ps-payment-methods .price").text().trim();
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $(".prc-org").text().trim() || $(".original-price").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-            if (!imageUrl) imageUrl = $(".base-product-image > img").attr("src");
-
-        } else if (finalUrl.includes("hepsiburada.com")) {
-            source = "hepsiburada";
-            title = $("h1#product-name").text().trim();
-
-            const priceText = $("#offering-price").attr("content") || $(".markup").text().trim();
-            price = parsePrice(priceText);
-
-            const orgPriceText = $(".price-old").text().trim() || $(".old-price").text().trim();
-            originalPrice = parsePrice(orgPriceText);
-
-            imageUrl = $("img.product-image").attr("src");
-        } else if (finalUrl.includes("amazon.")) {
-            source = "amazon";
-            // Amazon specifics
-            try { await page.waitForSelector('#productTitle', { timeout: 5000 }); } catch (e) { }
-
-            if (!title) title = $("#productTitle").text().trim();
-            if (!price) {
-                // Amazon often uses .a-price .a-offscreen
-                // e.g. <span class="a-price"><span class="a-offscreen">12.999,00 TL</span></span>
-                const priceText = $(".a-price .a-offscreen").first().text().trim() ||
-                    $(".a-price").first().text().trim() ||
-                    $("#price_inside_buybox").text().trim();
-                price = parsePrice(priceText);
-            }
-            // List Price
-            const orgPriceText = $(".a-text-price .a-offscreen").first().text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-            if (!imageUrl) {
-                imageUrl = $("#landingImage").attr("src") || $("#imgBlkFront").attr("src");
-            }
-        } else if (finalUrl.includes("zara.com")) {
-            source = "zara";
-            // Zara scraping relies heavily on JSON-LD logic above or specific fallbacks here
-            if (!title) title = $("h1.product-detail-info__header-name").text().trim() ||
-                $("h1.product-name").text().trim() ||
-                $("h1").text().trim();
-
-            if (!price) {
-                // Selector strategy: Try strict single elements first
-                let priceText = $(".price-current__amount .money-amount__main").first().text().trim() ||
-                    $(".price-current__amount").first().text().trim() ||
-                    $(".price__amount").first().text().trim();
-
-                // Fallback for concatenated cases (e.g. "2.290 TL")
-                if (!priceText) {
-                    const stickyPrice = $(".product-detail-info__price-amount").first().text().trim();
-                    if (stickyPrice) priceText = stickyPrice;
-                }
-
-                price = parsePrice(priceText);
-            }
-
-            const orgPriceText = $(".price-old__amount .money-amount__main").first().text().trim() ||
-                $(".price-old__amount").first().text().trim() ||
-                $(".product-detail-info__price-amount--old").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-        } else if (finalUrl.includes("bershka.com")) {
-            source = "bershka";
-            if (!title) title = $("h1").text().trim() || $(".product-title").text().trim() || $(".product-name").text().trim();
-            if (!price) {
-                const priceText = $(".current-price-elem").text().trim() ||
-                    $(".price-current").text().trim() ||
-                    $(".product-price").text().trim() ||
-                    $(".current-price").text().trim();
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $(".old-price-elem").text().trim() ||
-                $(".product-price-old").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-        } else if (finalUrl.includes("stradivarius.com")) {
-            source = "stradivarius";
-            if (!title) title = $("div[data-qa-label='product-name']").text().trim() || $("h1").text().trim() || $(".product-name").text().trim();
-            if (!price) {
-                const priceText = $(".price-current").text().trim() ||
-                    $("span[data-qa-label='product-price']").text().trim() ||
-                    $(".product-price").text().trim(); // Added
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $(".price-old").text().trim() ||
-                $("span[data-qa-label='product-old-price']").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-        } else if (finalUrl.includes("pullandbear.com")) {
-            source = "pullandbear";
-            if (!title) title = $("h1").text().trim() || $(".product-name").text().trim() || $("#product-name").text().trim();
-            if (!price) {
-                const priceText = $("span[data-qa-label='product-price']").text().trim() ||
-                    $(".current-price").text().trim() ||
-                    $(".price-current").text().trim();
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $("span[data-qa-label='product-old-price']").text().trim() ||
-                $(".old-price").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-        } else if (finalUrl.includes("oysho.com")) {
-            source = "oysho";
-            if (!title) title = $("h1").text().trim();
-            if (!price) {
-                const priceText = $(".price-current").text().trim() ||
-                    $(".product-price").text().trim();
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $(".price-old").text().trim() ||
-                $(".product-old-price").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-        } else if (finalUrl.includes("massimodutti.com")) {
-            source = "massimodutti";
-            if (!title) title = $("h1").text().trim();
-            if (!price) {
-                const priceText = $(".price-current").text().trim() ||
-                    $(".product-price-current").text().trim();
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $(".price-old").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-
-        } else if (finalUrl.includes("zarahome.com")) {
-            source = "zarahome";
-            if (!title) title = $("h1").text().trim();
-            if (!price) {
-                const priceText = $(".price-current-elem").text().trim() ||
-                    $(".price").text().trim() ||
-                    $(".product-price").text().trim();
-                price = parsePrice(priceText);
-            }
-
-        } else if (finalUrl.includes("lefties.com")) {
-            source = "lefties";
-            if (!title) title = $(".product-name").text().trim() || $("h1").text().trim();
-            if (!price) {
-                const priceText = $(".current-price").text().trim() ||
-                    $(".product-price").text().trim();
-                price = parsePrice(priceText);
-            }
-            const orgPriceText = $(".old-price").text().trim();
-            if (orgPriceText) originalPrice = parsePrice(orgPriceText);
-        } else if (finalUrl.includes("mango.com")) {
-            source = "mango";
-            if (!title) title = $("h1").text().trim();
-            if (!price) {
-                const priceText = $("span[data-testid='current-price']").text().trim() || $(".product-price").text().trim();
-                price = parsePrice(priceText);
-            }
-        } else if (finalUrl.includes("hm.com")) {
-            source = "hm";
-            if (!title) title = $("h1").text().trim();
-            if (!price) {
-                // H&M specific
-                const priceText = $("#product-price .price-value").text().trim() || $(".price-value").text().trim();
-                price = parsePrice(priceText);
-            }
-            if (!imageUrl) {
-                imageUrl = $("figure.pdp-image img").first().attr("src") || $("img.product-detail-main-image").attr("src");
-            }
-        } // Generic Fallback for JSON-LD is already handled above in the Trendyol block, wait...
-        // The previous code had JSON-LD logic INSIDE the Trendyol block. This is a mistake.
-        // I need to pull the generic extraction OUT of the Trendyol specific block so it runs for everyone.
-
-
-        if (!title) {
-            console.log("Visual title not found. Attempting Meta Tag extraction...");
-            title = $("meta[property='og:title']").attr("content") ||
-                $("meta[name='twitter:title']").attr("content");
-
-            if (!imageUrl) {
-                imageUrl = $("meta[property='og:image']").attr("content") ||
-                    $("meta[name='twitter:image']").attr("content");
-            }
-
-            if (!price) {
-                // Try og:price:amount or text in description
-                const ogPrice = $("meta[property='og:price:amount']").attr("content") ||
-                    $("meta[property='product:price:amount']").attr("content");
-                if (ogPrice) price = parsePrice(ogPrice);
-            }
-
-            if (title) console.log(`Recovered via Meta Tags: ${title}`);
-            else console.error("Scraper Error: Title still not found after Meta Tag fallback.");
+        // STRATEGY 4: FALLBACK (Visual Selection)
+        if (!title) title = $('h1').first().text().trim();
+        if (!price) {
+            // Try to find any price-looking text in h1's parent or specialized price containers
+            const raw = $('body').text().match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/);
+            if (raw) price = parsePrice(raw[0]);
         }
 
-        // Categorization Logic
-        const detectCategory = (url, title, content) => {
-            const lowerTitle = (title || "").toLowerCase();
-            const lowerUrl = url.toLowerCase();
-
-            if (lowerUrl.includes("elektronik") || lowerUrl.includes("teknoloji") || lowerUrl.includes("bilgisayar") || lowerUrl.includes("telefon") ||
-                lowerTitle.includes("iphone") || lowerTitle.includes("samsung") || lowerTitle.includes("laptop")) return "elektronik";
-
-            if (lowerUrl.includes("giyim") || lowerUrl.includes("ayakkabi") || lowerUrl.includes("elbise") || lowerUrl.includes("kadin") || lowerUrl.includes("erkek") ||
-                lowerUrl.includes("zara") || lowerUrl.includes("bershka") || lowerUrl.includes("stradivarius") || lowerUrl.includes("pullandbear") ||
-                lowerUrl.includes("lefties") || lowerUrl.includes("mango") || lowerUrl.includes("hm")) return "moda";
-
-            if (lowerUrl.includes("kozmetik") || lowerUrl.includes("bakim") || lowerUrl.includes("parfum") || lowerTitle.includes("parfüm")) return "kozmetik";
-
-            if (lowerUrl.includes("ev-yasam") || lowerUrl.includes("mobilya") || lowerUrl.includes("mutfak") || lowerUrl.includes("zarahome")) return "ev";
-
-            return "diger";
-        };
-
-        const category = detectCategory(finalUrl, title, content);
-
-        return {
+        // Clean Results
+        const result = {
             title: title || "Ürün Başlığı Bulunamadı",
-            currentPrice: price,
-            originalPrice: originalPrice,
-            imageUrl: imageUrl || "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg",
-            source: source || "unknown",
-            url: finalUrl,
-            inStock: inStock,
-            category: category
+            currentPrice: price || 0,
+            originalPrice: originalPrice || price || 0,
+            imageUrl: imageUrl || "",
+            source: source,
+            url: url,
+            inStock: true,
+            category: detectCategory(title),
+            gender: detectGender(url, title)
         };
+        console.log(`✅ Scraper Başarılı: ${JSON.stringify(result)}`);
+        return result;
 
     } catch (error) {
-        console.error("Scraping error:", error);
-        throw new Error(`Ürün bilgileri çekilemedi: ${error.message}`);
+        console.error(`❌ Scrape Hatası (${url}):`, error.message);
+        // CRITICAL: Return SAFE object instead of crashing
+        return {
+            title: "Analiz Edilemedi",
+            currentPrice: 0,
+            imageUrl: "",
+            source: 'unknown',
+            url: url,
+            error: true
+        };
     } finally {
-        if (page) await page.close();
+        if (isolatedBrowser) await isolatedBrowser.close();
+        else if (page) await page.close();
     }
 }
 
 function parsePrice(text) {
     if (!text) return 0;
 
-    // Clean weird characters but keep digits, dots, commas
+    // Remove non-numeric chars except . and ,
     let clean = text.replace(/[^\d.,]/g, '').trim();
+    if (!clean) return 0;
 
-    // Check format: Turkish/European (1.299,90) vs US (1,299.90)
-    // Heuristic: If last punctuation is ',', it's decimal. If last is '.', it's decimal (US).
+    // Detect format:
+    // 15.000,50 -> TR format (dot is thousand, comma is decimal)
+    // 15,000.50 -> US format (comma is thousand, dot is decimal)
+    // 15.000 -> TR format (thousand)
 
-    const lastComma = clean.lastIndexOf(',');
     const lastDot = clean.lastIndexOf('.');
+    const lastComma = clean.lastIndexOf(',');
 
-    if (lastComma > lastDot) {
-        // Turkish/Euro format: 1.299,90 -> Remove dots, replace comma with dot
-        clean = clean.replace(/\./g, '').replace(',', '.');
-    } else if (lastDot > lastComma) {
-        // US format: 1,299.90 -> Remove commas
-        clean = clean.replace(/,/g, '');
-    } else {
-        // No separators or just one.
-        // If "2290" -> 2290
-        // If "2290,00" -> 2290.00 (handled by first case technically if comma exists)
+    if (lastDot > -1 && lastComma > -1) {
+        if (lastDot > lastComma) {
+            // US Format or mixed correctly: 1,500.50
+            return parseFloat(clean.replace(/,/g, ''));
+        } else {
+            // TR Format: 1.500,50
+            return parseFloat(clean.replace(/\./g, '').replace(',', '.'));
+        }
+    }
+
+    if (lastComma > -1) {
+        // Only comma: 99,50 or 1,500 (Ambiguous)
+        // Heuristic: If comma is 3 digits from end, might be thousands, but usually in TR it's decimals for small strings
+        const parts = clean.split(',');
+        if (parts[parts.length - 1].length === 3 && clean.length > 4) {
+            // Likely thousand: 1,000
+            return parseFloat(clean.replace(/,/g, ''));
+        }
+        // Likely decimal: 99,50
+        return parseFloat(clean.replace(',', '.'));
+    }
+
+    if (lastDot > -1) {
+        // Only dot: 15.000 or 15.50 (Ambiguous)
+        // Heuristic: If dot is 3 digits from end, it's almost certainly thousand separator in TR Context (Beymen, Zara etc)
+        const parts = clean.split('.');
+        if (parts[parts.length - 1].length === 3) {
+            // 15.000 -> 15000
+            return parseFloat(clean.replace(/\./g, ''));
+        }
+        // 15.50 -> 15.5
+        return parseFloat(clean);
     }
 
     return parseFloat(clean) || 0;
 }
 
-module.exports = { scrapeProduct };
+function detectCategory(title) {
+    if (!title) return "Genel";
+    const t = title.toLowerCase();
+    if (t.includes("elbise")) return "Elbise";
+    if (t.includes("pantolon")) return "Alt Giyim";
+    if (t.includes("ceket") || t.includes("mont")) return "Dış Giyim";
+    if (t.includes("ayakkabi") || t.includes("sneaker")) return "Ayakkabı";
+    return "Moda";
+}
+
+function detectGender(url, title) {
+    const text = (url + " " + title).toLowerCase();
+
+    // 1. Female Keywords (Turkish & English)
+    const femaleKeywords = [
+        "kadun", "kadin", "woman", "female", "elbise", "etek", "bluz", "tunik", "tayt", "sütyen", "sutyen",
+        "bra", "topuklu", "mini", "midi", "pudra", "floral", "şifon", "dantel", "fisto", "vual", "volan",
+        "crop", "bustiyer", "büstiyer", "askılı", "gecelik", "sabahlık", "küpe", "earring", "çanta", "bag",
+        "makyaj", "makeup", "ruj", "cilt bakımı", "eşarp", "şal", "fular", "lady", "jane", "cindy", "linda"
+    ];
+
+    // 2. Male Keywords (Turkish & English)
+    const maleKeywords = [
+        "erkek", "man", "male", "damatlik", "damatlık", "smokin", "sakalli", "sakallı", "jilet", "traş", "tras",
+        "berber", "beard", "boxer", "sliper", "tesbih", "nargile", "gentleman", "boy", "oğlan", "yakışıklı",
+        "james", "marcus", "martin", "jake", "jason", "serra", "adriano", "hunter"
+    ];
+
+    // 3. Logic: Check for direct mentions first
+    if (femaleKeywords.some(k => text.includes(k))) return "female";
+    if (maleKeywords.some(k => text.includes(k))) return "male";
+
+    // 4. Special Breadcrumb logic (especially for Zara/Beymen)
+    if (url.includes("/tr/kadin") || url.includes("/tr/woman") || url.includes("-kadin-")) return "female";
+    if (url.includes("/tr/erkek") || url.includes("/tr/man") || url.includes("-erkek-")) return "male";
+
+    return "unisex";
+}
+
+module.exports = { scrapeProduct, detectGender, parsePrice };

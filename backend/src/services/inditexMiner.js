@@ -1,6 +1,6 @@
-const browserService = require('./scraper/BrowserService');
-const cheerio = require('cheerio');
 const prisma = require('../config/db');
+const { detectGender } = require('./scraper/index');
+const browserService = require('./scraper/BrowserService');
 
 // URLs for "Special Prices" / "Sale" sections
 const TARGETS = [
@@ -23,9 +23,11 @@ const TARGETS = [
 
     // OYSHO (New)
     { source: "oysho", url: "https://www.oysho.com/tr/kadin/spors/indirim-c1010327508.html", gender: "woman" },
+    { source: "oysho", url: "https://www.oysho.com/tr/kadin/pijama-c1010214502.html", gender: "woman" }, // Backup Category
 
     // MASSIMO DUTTI (New)
     { source: "massimodutti", url: "https://www.massimodutti.com/tr/kadin/ozel-fiyatlar-n2642", gender: "woman" },
+    { source: "massimodutti", url: "https://www.massimodutti.com/tr/kadin/giyim/elbise-n1545", gender: "woman" }, // Backup Category
 
     // ZARA (Moved to end due to high latency/bot protection)
     { source: "zara", url: "https://www.zara.com/tr/tr/s-kadin-l8631.html", gender: "woman" },
@@ -34,10 +36,15 @@ const TARGETS = [
     { source: "zara", url: "https://www.zara.com/tr/tr/erkek-ceket-l629.html?v1=2420803", gender: "man" }
 ];
 
-async function mineInditex() {
+async function mineInditex(targetFilter = []) {
     console.log("🏭 Inditex Miner Started...");
 
-    for (const target of TARGETS) {
+    // Filter targets if provided
+    const activeTargets = targetFilter.length > 0
+        ? TARGETS.filter(t => targetFilter.includes(t.source))
+        : TARGETS;
+
+    for (const target of activeTargets) {
         try {
             console.log(`⛏️ Mining: ${target.source.toUpperCase()} (${target.gender})`);
             await mineCategory(target);
@@ -92,7 +99,7 @@ async function mineCategory(target) {
             const items = [];
 
             // Universal Selectors for Inditex Brands
-            const productSelector = '.category-product-card, .grid-card, .product-grid-product, li.product-grid-product, legacy-product, .c-tile--product, article.product, .product-item, div[class*="product-card"], a[class*="product-link"]';
+            const productSelector = '.grid-product, .product-card-figure, .category-product-card, .grid-card, .product-grid-product, li.product-grid-product, legacy-product, .c-tile--product, article.product, .product-item, div[class*="product-card"], a[class*="product-link"]';
 
             let elements = document.querySelectorAll(productSelector);
             console.log(`🔎 Found ${elements.length} primary elements.`);
@@ -142,17 +149,23 @@ async function mineCategory(target) {
                     let priceText = "";
                     let originalPriceText = "";
 
-                    if (targetSource === 'zara') {
+                    if (source === 'zara') {
                         // Zara Specific Price Extraction
-                        const currentPriceElem = el.querySelector('.price__amount--current, .price-current__amount');
-                        const oldPriceElem = el.querySelector('.price__amount--old, .price-old__amount, .price__amount--strikethrough');
+                        const currentPriceElem = el.querySelector('.price__amount--current, .price-current__amount, .money-amount__main');
+                        const oldPriceElem = el.querySelector('.price__amount--old, .price-old__amount, .price__amount--strikethrough, .money-amount__main--strikethrough');
 
                         if (currentPriceElem) priceText = currentPriceElem.innerText.trim();
                         if (oldPriceElem) originalPriceText = oldPriceElem.innerText.trim();
+
+                        // Zara Specific Title Extraction
+                        if (!title) {
+                            const zaraTitle = el.querySelector('.product-grid-product-info__name, .product-item__name, .name');
+                            if (zaraTitle) title = zaraTitle.innerText.trim();
+                        }
                     } else {
                         // A. Try generic price selectors first (Light DOM)
-                        const priceEl = el.querySelector('.current-price-elem, .price-current, .price-current__amount, .product-item__price--current, .product-price-current');
-                        const oldPriceEl = el.querySelector('.old-price-elem, .price-old, .price-old__amount, .product-item__price--old, .product-price-old');
+                        const priceEl = el.querySelector('.current-price-elem, .price-current, .price-current__amount, .product-item__price--current, .product-price-current, .price__amount--current');
+                        const oldPriceEl = el.querySelector('.old-price-elem, .price-old, .price-old__amount, .product-item__price--old, .product-price-old, .price__amount--old, .price__amount--strikethrough');
 
                         if (priceEl) priceText = priceEl.innerText.trim();
                         if (oldPriceEl) originalPriceText = oldPriceEl.innerText.trim();
@@ -177,27 +190,77 @@ async function mineCategory(target) {
                         if (match) priceText = match[0];
                     }
 
-                    // IMAGE
+                    // IMAGE (ROBUST)
                     let img = "";
-                    const imgEl = el.querySelector('img');
-                    if (imgEl) {
-                        img = imgEl.getAttribute('data-original') || imgEl.getAttribute('src') || imgEl.getAttribute('data-src');
+                    const selectors = [
+                        '.media-image',
+                        '.media-image__image', // Zara
+                        '.product-detail-images__image', // Zara old
+                        '.product-image img', // General
+                        'img[itemprop="image"]',
+                        '.main-image img',
+                        'img.image-item', // Bershka/PB
+                        'img[class*="product-image"]',
+                        '.image-container img',
+                        '.product-detail-main-image-container img', // H&M
+                        '.product-image-gallery img',
+                        '.product-images__image', // Mango
+                        'img[data-testid="product-image"]'
+                    ];
+
+                    // Try selectors inside the element first
+                    for (let s of selectors) {
+                        const iEl = el.querySelector(s);
+                        if (iEl) {
+                            if (iEl.tagName === 'IMG') {
+                                img = iEl.getAttribute('data-original') || iEl.getAttribute('src') || iEl.getAttribute('data-src');
+                            } else {
+                                const inner = iEl.querySelector('img');
+                                if (inner) img = inner.getAttribute('data-original') || inner.getAttribute('src') || inner.getAttribute('data-src');
+                            }
+                            if (img) break;
+                        }
+                    }
+
+                    // Fallback: Direct img tag
+                    if (!img) {
+                        const imgEl = el.querySelector('img');
+                        if (imgEl) {
+                            img = imgEl.getAttribute('data-original') || imgEl.getAttribute('src') || imgEl.getAttribute('data-src');
+                        }
+                    }
+
+                    // Downgrade quality hack (optional, to avoid huge downloads if needed, but we want high res)
+                    if (img && img.includes('?')) {
+                        // Keep query params mostly, maybe adjust width if supported
                     }
 
                     console.log(`🔎 Item ${index}: Title="${title}", Price="${priceText}", URL="${url}"`);
 
-                    if (url && (title || priceText)) {
+                    const junkTitles = ["ana içeriğe atla", "skip to main content", "hesabım", "sepetim", "yardım", "keşfet", "menü"];
+                    const isJunk = junkTitles.some(jt => (title || "").toLowerCase().includes(jt));
+
+                    // Improved URL check for products (ID usually follows p)
+                    const isProductUrl = url && (url.includes('-p') || url.includes('p/') || url.match(/[cp]\d+/i));
+
+                    if (url && (title || priceText) && !isJunk && isProductUrl) {
+                        // STRICT IMAGE CHECK
+                        if (!img || img.trim() === "") {
+                            console.log(`⚠️ Skipping Item ${index}: Missing Image. URL: ${url}`);
+                            return;
+                        }
+
                         items.push({
                             title: title || "Fırsat Ürünü",
                             url: url,
                             priceRaw: priceText, // Backend will parse
                             originalPriceRaw: originalPriceText,
-                            imageUrl: img || "",
+                            imageUrl: img,
                             source: source,
                             category: 'moda'
                         });
                     } else {
-                        console.log(`⚠️ Skipping Item ${index}: Missing Title/Price or URL.`);
+                        console.log(`⚠️ Skipping Item ${index}: Missing Title/Price, URL, Junk or Invalid URL.`);
                     }
                 } catch (e) { console.log(`❌ Error processing item ${index}:`, e.message); }
             });
@@ -227,13 +290,12 @@ async function mineCategory(target) {
                 imageUrl: p.imageUrl,
                 source: p.source,
                 isSystem: true,
-                category: detailedCategory, // Use derived category
+                category: detailedCategory,
+                gender: detectGender(p.url, p.title),
                 userEmail: "inditex_bot",
                 inStock: true
             };
-
             const existing = await prisma.product.findFirst({ where: { url: p.url } });
-
             if (existing) {
                 await prisma.product.update({
                     where: { id: existing.id },
@@ -243,11 +305,13 @@ async function mineCategory(target) {
                         originalPrice: productData.originalPrice || existing.originalPrice,
                         isSystem: true,
                         inStock: true,
-                        category: detailedCategory // Update category if it improved
+                        category: detailedCategory,
+                        gender: productData.gender,
+                        history: { create: { price: price } }
                     }
                 });
             } else {
-                await prisma.product.create({ data: { ...productData, views: 0 } });
+                await prisma.product.create({ data: { ...productData, views: 0, history: { create: { price: price } } } });
                 savedCount++;
             }
         }

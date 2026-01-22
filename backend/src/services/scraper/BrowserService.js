@@ -13,7 +13,6 @@ class BrowserService {
 
     async getBrowser() {
         if (this.browser) {
-            // Check if browser is still connected
             try {
                 await this.browser.version();
                 return this.browser;
@@ -22,13 +21,26 @@ class BrowserService {
                 this.browser = null;
             }
         }
+        return this._launchBrowser();
+    }
 
+    async restart() {
+        if (this.browser) {
+            console.log("♻️ Forcing Browser Restart...");
+            try { await this.browser.close(); } catch (e) { }
+            this.browser = null;
+        }
+        return this._launchBrowser();
+    }
+
+    async _launchBrowser() {
         const args = [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
-            '--window-size=1920,1080'
+            '--window-size=1920,1080',
+            '--lang=tr-TR' // FORCE TURKISH LOCALE NATIVELY
         ];
 
         // If we have proxies, rotate them
@@ -45,7 +57,8 @@ class BrowserService {
         this.browser = await puppeteer.launch({
             headless: true, // Force true to avoid 'new' deprecation confusion if version mismatched
             args: args,
-            executablePath: puppeteer.executablePath()
+            executablePath: puppeteer.executablePath(),
+            ignoreHTTPSErrors: true
         });
 
         return this.browser;
@@ -68,6 +81,23 @@ class BrowserService {
         await page.setUserAgent(ua);
 
         return page;
+    }
+
+    // New method for isolated sessions (Zara Nuclear Option without killing shared browser)
+    async createIsolatedPage() {
+        // Launch a NEW independent browser
+        const browser = await this._launchBrowser();
+        const page = await browser.newPage();
+
+        // Apply same anti-detection
+        await page.setViewport({ width: 1920, height: 1080 });
+        const userAgents = [
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+        ];
+        await page.setUserAgent(userAgents[Math.floor(Math.random() * userAgents.length)]);
+
+        return { browser, page };
     }
 
     async close() {

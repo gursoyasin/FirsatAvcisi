@@ -2,46 +2,72 @@ const prisma = require('../config/db');
 const browserService = require('./scraper/BrowserService');
 const cheerio = require('cheerio');
 
-// Threshold for notification (as requested by user)
-const PRICE_DROP_THRESHOLD = 100.0;
+// Hardcoded VIP List (Synced with user.js)
+const VIP_EMAILS = [
+    "yasin@example.com",
+    "gursoyreal@gmail.com",
+    "keskinezgi26@outlook.com"
+];
 
-async function checkWatchlistPrices() {
-    console.log("🕵️‍♂️ Starting Watchlist Price Check...");
+// Threshold for notification
+const PRICE_DROP_THRESHOLD = 50.0; // More sensitive
 
+// Wrapper for PRO users (Every 15 mins)
+async function checkProWatchlist() {
+    console.log("💎 [PRO] Starting Watchlist Check...");
+    await checkWatchlistPrices(true);
+}
+
+// Wrapper for FREE users (Every 3 hours)
+async function checkFreeWatchlist() {
+    console.log("👤 [FREE] Starting Watchlist Check...");
+    await checkWatchlistPrices(false);
+}
+
+async function checkWatchlistPrices(forProUsers) {
     try {
-        // 1. Fetch products that need checking
-        // Exclude system products if they are managed by miners, or include them if users track them?
-        // For now, let's check ALL products that are in someone's watchlist (implied by existence in Product table for MVP)
-        // Optimization: In real app, check only products linked to Users via Collections or Watchlist tables.
-        // Current Schema: Product has 'userEmail'.
+        // 1. Fetch products based on user tier
+        // We fetch ALL user products first because Prisma SQLite doesn't support basic array filtering easily on string fields without a User model.
+        // For MVP efficiency, we'll fetch 'isSystem: false' and filter in JS. 
+        // Ideally, we'd have a User model relation.
 
-        const productsToCheck = await prisma.product.findMany({
-            where: {
-                isSystem: false // Only check user-added products for now to save resources
-            }
+        const allUserProducts = await prisma.product.findMany({
+            where: { isSystem: false }
         });
 
-        console.log(`📋 Found ${productsToCheck.length} user products to check.`);
+        // Filter based on VIP emails
+        const productsToCheck = allUserProducts.filter(p => {
+            const isOwnerVIP = VIP_EMAILS.includes(p.userEmail?.toLowerCase().trim());
+            return forProUsers ? isOwnerVIP : !isOwnerVIP;
+        });
+
+        if (productsToCheck.length === 0) {
+            console.log(`ℹ️ No products found for ${forProUsers ? 'PRO' : 'FREE'} tier.`);
+            return;
+        }
+
+        console.log(`📋 [${forProUsers ? 'PRO' : 'FREE'}] Checking ${productsToCheck.length} products...`);
 
         let browser = null;
 
         for (const product of productsToCheck) {
             try {
                 // 2. Scrape current price
-                const currentScrapedPrice = await scrapeCurrentPrice(product.url, browser);
+                const currentScrapedPrice = await scrapeCurrentPrice(product.url);
 
                 if (!currentScrapedPrice || currentScrapedPrice <= 0) {
                     console.log(`⚠️ Could not scrape price for ${product.id} - ${product.url}`);
                     continue;
                 }
 
-                console.log(`🔎 Product ${product.id}: Old=${product.currentPrice} New=${currentScrapedPrice}`);
+                // console.log(`🔎 Product ${product.id}: Old=${product.currentPrice} New=${currentScrapedPrice}`);
 
                 // 3. Compare with DB Price
                 const priceDiff = product.currentPrice - currentScrapedPrice;
 
+                // Price Drop Logic
                 if (priceDiff >= PRICE_DROP_THRESHOLD) {
-                    console.log(`📉 PRICE DROP DETECTED! ${priceDiff} TL drop.`);
+                    console.log(`📉 PRICE DROP DETECTED! ${priceDiff} TL drop for ${product.userEmail}`);
 
                     // 4. Update DB
                     await prisma.product.update({
@@ -57,18 +83,19 @@ async function checkWatchlistPrices() {
                         }
                     });
 
-                    // 5. Create Alert Log (Notification)
+                    // 5. Create Alert Log
                     await prisma.alertLog.create({
                         data: {
                             productId: product.id,
-                            message: `Müjde! ${product.title.substring(0, 20)}... fiyatı ${product.currentPrice} TL'den ${currentScrapedPrice} TL'ye düştü! (${priceDiff.toFixed(2)} TL indirim)`,
+                            message: `Müjde! ${product.title.substring(0, 20)}... fiyatı ${product.currentPrice} TL'den ${currentScrapedPrice} TL'ye düştü!`,
                             type: 'PRICE_DROP'
                         }
                     });
 
                     console.log(`🔔 Notification logged for ${product.id}`);
-                } else if (currentScrapedPrice !== product.currentPrice) {
-                    // Update price even if drop is small or price increased, to keep data fresh
+                }
+                // Price Change (Increase or Small Drop) - Just Update
+                else if (currentScrapedPrice !== product.currentPrice) {
                     await prisma.product.update({
                         where: { id: product.id },
                         data: {
@@ -76,7 +103,7 @@ async function checkWatchlistPrices() {
                             updatedAt: new Date()
                         }
                     });
-                    console.log(`Price updated (no alert): ${product.currentPrice} -> ${currentScrapedPrice}`);
+                    console.log(`🔄 Price updated (no alert): ${product.currentPrice} -> ${currentScrapedPrice}`);
                 }
 
             } catch (error) {
@@ -86,22 +113,17 @@ async function checkWatchlistPrices() {
 
     } catch (error) {
         console.error("❌ Watchlist Tracker Error:", error);
-    } finally {
-        console.log("🏁 Watchlist Check Completed.");
     }
 }
 
-// Simple scraper for check (can reuse Scraper service logic but simplified for speed)
-async function scrapeCurrentPrice(url, browserInstance) {
-    // Determine method based on URL (PttAVM, Trendyol, Hepsiburada need Puppeteer)
-    // For MVP, we use the BrowserService for everything to be safe against blocking
+// Simple scraper for check
+async function scrapeCurrentPrice(url) {
     let page;
     try {
         page = await browserService.createPage();
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        // Faster timeout for tracker
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        // Generic selector logic (simplified from main scraper)
-        // We can inject a script to find the price or use common selectors
         const content = await page.content();
         const $ = cheerio.load(content);
 
@@ -109,7 +131,7 @@ async function scrapeCurrentPrice(url, browserInstance) {
         const selectors = [
             '.product-price', '.price', '.prc-dsc', '.current-price',
             '[data-testid="price"]', '.product-price-container',
-            '.price-current'
+            '.price-current', '.m-productPrice__salePrice', '.product__price--sale'
         ];
 
         let price = 0;
@@ -121,25 +143,43 @@ async function scrapeCurrentPrice(url, browserInstance) {
             }
         }
 
+        // Generic text search fallback
+        if (price === 0) {
+            const bodyText = $('body').text();
+            const cleanText = bodyText.replace(/\s+/g, ' ');
+            // Look for Turkish Price Format (1.250,90 TL or 1250 TL) heavily
+            const matches = cleanText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/ig);
+            if (matches && matches.length > 0) {
+                // Takes the first logical price found that is reasonable?
+                // This is risky, but better than 0 for tracker.
+                // Let's filter for prices found near "price" keywords if possible, but for now just parse first.
+                price = parsePrice(matches[0]);
+            }
+        }
+
         await page.close();
         return price;
 
     } catch (e) {
         if (page) await page.close();
-        console.error(`Scrape failed for ${url}: ${e.message}`);
         return 0;
     }
 }
 
 function parsePrice(text) {
     if (!text) return 0;
-    // Remove default currency symbols
     let clean = text.replace('TL', '').replace('₺', '').replace('TRY', '').trim();
-    // Handle European style 1.200,50
-    clean = clean.replace(/\./g, '').replace(',', '.');
-    // Extract first valid number
+    if (clean.includes(',') && clean.includes('.')) {
+        if (clean.lastIndexOf(',') > clean.lastIndexOf('.')) {
+            clean = clean.replace(/\./g, '').replace(',', '.');
+        } else {
+            clean = clean.replace(/,/g, '');
+        }
+    } else if (clean.includes(',')) {
+        clean = clean.replace(',', '.');
+    }
     const match = clean.match(/(\d+\.?\d*)/);
     return match ? parseFloat(match[0]) : 0;
 }
 
-module.exports = { checkWatchlistPrices };
+module.exports = { checkProWatchlist, checkFreeWatchlist };

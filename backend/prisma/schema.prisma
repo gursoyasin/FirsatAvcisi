@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -27,6 +27,7 @@ model Product {
   collections  Collection[]
   inStock      Boolean      @default(true)
   category     String?      // electronics, fashion, beauty, home, etc.
+  gender       String?      // male, female, unisex
   lastPriceDropAt DateTime?
   bestAlternativePrice Float?
   bestAlternativeSource String?
@@ -39,6 +40,15 @@ model Product {
   // Phase 5: Innovation Features
   barcode      String?  @unique
   aiAnalysis   String?  // JSON: { recommendation: "BUY", confidence: 0.9, reason: "..." }
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  gender    String?  // male, female
+  brands    String?  // JSON array of interested brands
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PriceHistory {

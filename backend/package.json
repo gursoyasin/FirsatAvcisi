@@ -23,6 +23,7 @@
     "express-rate-limit": "^8.2.1",
     "firebase-admin": "^13.6.0",
     "helmet": "^8.1.0",
+    "node-cron": "^4.2.1",
     "nodemon": "^3.1.9",
     "onesignal-node": "^3.4.0",
     "p-limit": "^2.2.0",

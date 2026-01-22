@@ -85,8 +85,36 @@ router.get('/resolve-url', async (req, res) => {
 const VIP_EMAILS = [
     "yasin@example.com", // Placeholder
     "gursoyreal@gmail.com", // You
-    "keskinezgi26@outlook.com", // manita
+    "keskinezgi26@outlook.com", // manitam
 ];
+
+// Check User Status (Manual VIP)
+router.get('/user/status', async (req, res) => {
+    try {
+        let userEmail = req.headers['x-user-email'];
+        if (!userEmail) {
+            console.log("👤 Status Check: No email header provided.");
+            return res.json({ isPremium: false, type: 'FREE', message: "No email provided" });
+        }
+
+        // Normalize
+        userEmail = userEmail.trim().toLowerCase();
+        const normalizedVIPs = VIP_EMAILS.map(e => e.trim().toLowerCase());
+
+        const isManualVIP = normalizedVIPs.includes(userEmail);
+
+        console.log(`👤 Status Check: '${userEmail}' -> VIP: ${isManualVIP}`);
+
+        if (isManualVIP) {
+            return res.json({ isPremium: true, type: 'MANUAL_VIP' });
+        } else {
+            return res.json({ isPremium: false, type: 'FREE' });
+        }
+    } catch (error) {
+        console.error("Status check error:", error);
+        res.status(500).json({ error: "Status check failed" });
+    }
+});
 
 // Get all products (User Specific)
 router.get('/products', async (req, res) => {
@@ -375,9 +403,20 @@ router.patch('/products/:id', async (req, res) => {
 router.delete('/products/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.product.delete({
-            where: { id: parseInt(id) }
+        const userEmail = req.headers['x-user-email'];
+
+        const deleteResult = await prisma.product.deleteMany({
+            where: {
+                id: parseInt(id),
+                ...(userEmail && { userEmail: userEmail }) // Security: ONLY delete if it belongs to user
+            }
         });
+
+        if (deleteResult.count === 0) {
+            console.log(`Product ${id} not found or not owned by ${userEmail}`);
+            return res.status(404).json({ error: "Product not found" });
+        }
+
         console.log(`Deleted Product ${id}`);
         res.json({ message: "Product deleted" });
     } catch (error) {

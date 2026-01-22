@@ -14,7 +14,9 @@ const productRoutes = require('./routes/products');
 const priceHistoryRoutes = require('./routes/priceHistory');
 const searchRoutes = require('./routes/search');
 const collectionsRoutes = require('./routes/collections');
-const notificationsRoutes = require('./routes/notifications'); // If exists
+const notificationsRoutes = require('./routes/notifications');
+const userRoutes = require('./routes/user'); // Newly Added
+const statsRoutes = require('./routes/stats');
 const scraperService = require('./services/scraper');
 const trackerService = require('./services/tracker');
 
@@ -26,11 +28,12 @@ app.use(helmet());
 app.use(compression());
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/images', express.static('public/images'));
 
-// Rate Limiting (Basic protection)
+// Rate Limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 app.use(limiter);
 
@@ -46,19 +49,24 @@ app.use('/api/price-history', priceHistoryRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/collections', collectionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/user', userRoutes); // Mount the user route
+app.use('/api/stats', statsRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
     res.send('Fırsat Avcısı Backend Ultra ++ is running 🚀');
 });
 
-// Global Error Handler (Must be last)
+// Global Error Handler
 app.use(errorHandler);
 
+// Start Background Services
+const { startScheduler } = require('./services/scheduler');
+startScheduler();
+
+// Start Server
 // Start Server
 app.listen(PORT, () => {
-    logger.info(`Server is running on port ${PORT}`);
-
-    // Start background tasks
-    trackerService.startPriceTracker();
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

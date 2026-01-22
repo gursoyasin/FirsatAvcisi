@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../config/db'); // Ensure this points to correct db instance
 const { scrapeProduct } = require('../services/scraper');
-const { lookupBarcode } = require('../services/barcode'); // Assuming validation
+const { lookupBarcode } = require('../services/barcode');
+const { findAlternatives } = require('../services/comparison');
 const { analyzePrice } = require('../services/analysisService');
 
 // Helper to handle double-encoded strings
@@ -75,7 +76,7 @@ router.get('/', async (req, res) => {
 // 2. Add Product
 router.post('/', async (req, res) => {
     try {
-        let { url, title, price, imageUrl, source, inStock, originalPrice } = req.body;
+        let { url, title, price, imageUrl, source, inStock, originalPrice, targetPrice } = req.body;
         let productData = { url, title, price, imageUrl, source, inStock, originalPrice };
 
         if (!title && url) {
@@ -109,11 +110,15 @@ router.post('/', async (req, res) => {
             if (count >= 3) return res.status(403).json({ error: "LIMIT_REACHED", message: "Ücretsiz plan limiti doldu. Premium'a geçin!" });
         }
 
+        // SANITIZE: Remove 'price' field which conflicts with Prisma schema ('currentPrice' is used)
+        delete productData.price;
+
         const product = await prisma.product.create({
             data: {
                 ...productData,
                 currentPrice: numericPrice,
                 originalPrice: parseFloat(productData.originalPrice) || 0,
+                targetPrice: targetPrice ? parseFloat(targetPrice) : null,
                 userEmail: userEmail,
                 category: productData.category || "diger",
                 history: { create: { price: numericPrice } }
@@ -126,258 +131,119 @@ router.post('/', async (req, res) => {
     }
 });
 
-// 3. Trending Products
+const { getHeartFeed, getDailyPick } = require('../services/dailyFeedService');
+
 router.get('/trending', async (req, res) => {
     try {
-        const { category } = req.query;
-        console.log(`🔥 TRENDING REQUEST: Category=${category}`);
-
-        // Logic same as original api.js but cleaner?
-        // For brevity, replicating the core logic
-        const hotProducts = await prisma.product.findMany({
-            where: {
-                isSystem: true,
-                inStock: true,
-                lastPriceDropAt: { not: null },
-                // Exclude Inditex & Fashion Brands from Home Page
-                source: { notIn: ['zara', 'bershka', 'pullandbear', 'stradivarius', 'oysho', 'massimodutti', 'zarahome', 'lefties', 'hm', 'mango'] },
-                // Also exclude TrendyolMilla (if title contains it) - simple heuristic for now
-                NOT: { title: { contains: 'TrendyolMilla' } },
-                // Advanced Category Filtering
-                ...(category && category !== 'Hepsi' ? (() => {
-                    const cleanCat = category.toLowerCase();
-                    console.log(`🔎 Filtering for: ${cleanCat}`);
-                    if (cleanCat === 'telefon') {
-                        console.log("✅ Applying TELEFON filter");
-                        return {
-                            OR: [
-                                { category: 'telefon' }, // Specific category
-                                // Remove category constraint and add variations
-                                { title: { contains: 'telefon' } }, { title: { contains: 'Telefon' } },
-                                { title: { contains: 'iphone' } }, { title: { contains: 'iPhone' } },
-                                { title: { contains: 'samsung' } }, { title: { contains: 'Samsung' } },
-                                { title: { contains: 'android' } }, { title: { contains: 'Android' } },
-                                { title: { contains: 'redmi' } }, { title: { contains: 'Redmi' } },
-                                { title: { contains: 'xiaomi' } }, { title: { contains: 'Xiaomi' } }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'bilgisayar') {
-                        return {
-                            OR: [
-                                { category: 'bilgisayar' },
-                                { title: { contains: 'bilgisayar' } }, { title: { contains: 'Bilgisayar' } },
-                                { title: { contains: 'laptop' } }, { title: { contains: 'Laptop' } },
-                                { title: { contains: 'macbook' } }, { title: { contains: 'Macbook' } }, { title: { contains: 'MacBook' } },
-                                { title: { contains: 'notebook' } }, { title: { contains: 'Notebook' } },
-                                { title: { contains: 'dizüstü' } }, { title: { contains: 'Dizüstü' } },
-                                { title: { contains: 'tablet' } }, { title: { contains: 'Tablet' } },
-                                { title: { contains: 'ipad' } }, { title: { contains: 'iPad' } }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'market') {
-                        return {
-                            OR: [
-                                { category: 'market' },
-                                { category: 'ev' },
-                                { category: 'gida' },
-                                { category: 'süpermarket' }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'spor') {
-                        return {
-                            OR: [
-                                { category: 'spor' },
-                                { title: { contains: 'spor' } }, { title: { contains: 'Spor' } },
-                                { title: { contains: 'kamp' } }, { title: { contains: 'Kamp' } },
-                                { title: { contains: 'outdoor' } }, { title: { contains: 'Outdoor' } },
-                                { title: { contains: 'fitness' } }, { title: { contains: 'Fitness' } },
-                                { title: { contains: 'eşofman' } }, { title: { contains: 'Eşofman' } }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'moda') {
-                        return { category: 'moda' };
-                    }
-                    if (cleanCat === 'kozmetik') {
-                        return { category: 'kozmetik' };
-                    }
-                    // Fallback for generic categories
-                    return { category: cleanCat };
-                })() : {})
-            },
-            take: 10,
-            orderBy: { lastPriceDropAt: 'desc' }
-        });
-
-        const systemProducts = await prisma.product.findMany({
-            where: {
-                isSystem: true, inStock: true, id: { notIn: hotProducts.map(p => p.id) },
-                ...(category && category !== 'Hepsi' ? (() => {
-                    const cleanCat = category.toLowerCase();
-                    if (cleanCat === 'telefon') {
-                        return {
-                            OR: [
-                                { category: 'telefon' }, // Specific category
-                                // Remove category constraint and add variations
-                                { title: { contains: 'telefon' } }, { title: { contains: 'Telefon' } },
-                                { title: { contains: 'iphone' } }, { title: { contains: 'iPhone' } },
-                                { title: { contains: 'samsung' } }, { title: { contains: 'Samsung' } },
-                                { title: { contains: 'android' } }, { title: { contains: 'Android' } },
-                                { title: { contains: 'redmi' } }, { title: { contains: 'Redmi' } },
-                                { title: { contains: 'xiaomi' } }, { title: { contains: 'Xiaomi' } }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'bilgisayar') {
-                        return {
-                            OR: [
-                                { category: 'bilgisayar' },
-                                { title: { contains: 'bilgisayar' } }, { title: { contains: 'Bilgisayar' } },
-                                { title: { contains: 'laptop' } }, { title: { contains: 'Laptop' } },
-                                { title: { contains: 'macbook' } }, { title: { contains: 'Macbook' } }, { title: { contains: 'MacBook' } },
-                                { title: { contains: 'notebook' } }, { title: { contains: 'Notebook' } },
-                                { title: { contains: 'dizüstü' } }, { title: { contains: 'Dizüstü' } },
-                                { title: { contains: 'tablet' } }, { title: { contains: 'Tablet' } },
-                                { title: { contains: 'ipad' } }, { title: { contains: 'iPad' } }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'market') {
-                        return {
-                            OR: [
-                                { category: 'market' },
-                                { category: 'ev' },
-                                { category: 'gida' },
-                                { category: 'süpermarket' }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'spor') {
-                        return {
-                            OR: [
-                                { category: 'spor' },
-                                { title: { contains: 'spor' } }, { title: { contains: 'Spor' } },
-                                { title: { contains: 'kamp' } }, { title: { contains: 'Kamp' } },
-                                { title: { contains: 'outdoor' } }, { title: { contains: 'Outdoor' } },
-                                { title: { contains: 'fitness' } }, { title: { contains: 'Fitness' } },
-                                { title: { contains: 'eşofman' } }, { title: { contains: 'Eşofman' } }
-                            ]
-                        };
-                    }
-                    if (cleanCat === 'moda') {
-                        return { category: 'moda' };
-                    }
-                    if (cleanCat === 'kozmetik') {
-                        return { category: 'kozmetik' };
-                    }
-                    return { category: cleanCat };
-                })() : {})
-            },
-            take: 50
-        });
-
-        // Combine
-        const combined = [...hotProducts, ...systemProducts];
-
-        // Parse JSONs
-        const polished = combined.map(p => ({
-            ...p,
-            sellers: safeParseJSON(p.sellers),
-            variants: safeParseJSON(p.variants)
-        }));
-
-        res.json(polished);
-    } catch (error) {
-        console.error("Trending Error:", error);
-        res.status(500).json({ error: "Failed to fetch trending", details: error.message });
-    }
-});
-
-// 4. Barcode Lookup (ULTRA FEATURE)
-router.post('/barcode', async (req, res) => {
-    try {
-        const { barcode } = req.body;
-        if (!barcode) return res.status(400).json({ error: "Barcode is required" });
-
-        // 1. Check DB first
-        const existing = await prisma.product.findUnique({ where: { barcode: barcode } });
-        if (existing) return res.json(existing);
-
-        // 2. Lookup External API
-        const result = await lookupBarcode(barcode);
-
-        // 3. If redirect required (e.g. short link)
-        if (result.title === "REDIRECT_REQUIRED") {
-            const realData = await scrapeProduct(result.url);
-            return res.json({ ...realData, barcode }); // Return with barcode so frontend knows
+        const userEmail = req.headers['x-user-email'];
+        let gender = null;
+        if (userEmail) {
+            const user = await prisma.user.findUnique({ where: { email: userEmail.toLowerCase() } });
+            gender = user ? user.gender : null;
         }
 
-        res.json(result);
+        const heartFeed = await getHeartFeed(gender);
+        res.json(heartFeed);
     } catch (error) {
-        console.error("Barcode Error:", error);
-        res.status(404).json({ error: "Product not found" });
+        console.error("Trending Error:", error);
+        res.status(500).json({ error: "Failed to fetch trending" });
     }
 });
 
-// 5. Price Analysis (ULTRA FEATURE)
-router.get('/:id/analysis', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const analysis = await analyzePrice(id);
-        res.json(analysis);
-    } catch (error) {
-        res.status(500).json({ error: "Analysis failed" });
-    }
-});
+// ...
 
-// 6. Inditex Feed
+// 6. Inditex Feed (Used for "Senin Tarzın" Daily Pick)
 router.get('/inditex/feed', async (req, res) => {
     try {
-        const { brand, category } = req.query;
-        const where = {
+        const { brand } = req.query;
+        const userEmail = req.headers['x-user-email'];
+        let gender = null;
+        if (userEmail) {
+            const user = await prisma.user.findUnique({ where: { email: userEmail.toLowerCase() } });
+            gender = user ? user.gender : null;
+        }
+
+        const normalizedSource = brand && brand !== 'Hepsi' ? brand.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '') : undefined;
+
+        const whereClause = {
             isSystem: true,
             inStock: true,
-            OR: [
-                // 1. Standard Inditex & Fashion Brands
-                { source: { in: ['zara', 'bershka', 'pullandbear', 'stradivarius', 'oysho', 'massimodutti', 'zarahome', 'lefties', 'hm', 'mango'] } },
-                // 2. TrendyolMilla (specific brand on Trendyol)
-                { source: 'trendyol', title: { contains: 'TrendyolMilla' } }
-            ]
+            source: normalizedSource
         };
-        if (brand && brand !== 'Hepsi') where.source = brand.toLowerCase();
-        if (category && category !== 'Tümü') where.category = category;
+
+        // Only apply gender filter if NO specific brand is selected (General Feed)
+        if (!normalizedSource) {
+            whereClause.OR = [
+                { gender: gender },
+                { gender: 'unisex' },
+                { gender: null }
+            ];
+        }
 
         const products = await prisma.product.findMany({
-            where,
+            where: whereClause,
             orderBy: [{ originalPrice: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
-            take: 50
+            take: 100
         });
 
-        const polished = products.map(p => ({
+        // Sort to put user's gender at the TOP
+        if (gender) {
+            products.sort((a, b) => {
+                if (a.gender === gender && b.gender !== gender) return -1;
+                if (a.gender !== gender && b.gender === gender) return 1;
+                return 0;
+            });
+        }
+
+        const polished = products.slice(0, 50).map(p => ({
             ...p,
-            sellers: safeParseJSON(p.sellers),
-            variants: safeParseJSON(p.variants),
-            history: p.history ? p.history.map(h => ({ ...h, checkedAt: h.createdAt })) : [],
             discountPercentage: p.originalPrice > p.currentPrice ? Math.round(((p.originalPrice - p.currentPrice) / p.originalPrice) * 100) : 0
         }));
 
         res.json(polished);
     } catch (error) {
-        res.status(500).json({ error: "Inditex feed failed" });
+        res.status(500).json({ error: "Feed failed" });
     }
 });
 
-// 7. Preview
+// 7. Preview & Barcode
+router.post('/barcode', async (req, res) => {
+    try {
+        const { barcode } = req.body;
+        if (!barcode) return res.status(400).json({ error: "Barcode required" });
+
+        const result = await lookupBarcode(barcode);
+
+        // Return as a preview-compatible object
+        res.json({
+            title: result.title,
+            currentPrice: 0,
+            imageUrl: "",
+            source: 'search',
+            url: result.url
+        });
+    } catch (error) {
+        console.error("Barcode route failed:", error);
+        res.status(500).json({ error: "Barkod sorgulama başarısız." });
+    }
+});
+
 router.post('/preview', async (req, res) => {
     try {
         const { url } = req.body;
         const data = await scrapeProduct(url);
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: "Preview failed" });
+        console.error("Preview Crash Prevented:", error);
+        // CRITICAL: Send valid JSON instead of 500 to prevent app crash
+        res.json({
+            title: "Bağlantı Sorunu",
+            currentPrice: 0,
+            imageUrl: "",
+            source: 'unknown',
+            url: req.body.url,
+            error: true
+        });
     }
 });
 
@@ -400,7 +266,49 @@ router.post('/batch-delete', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Failed" }); }
 });
 
+// 9. Set Target Price
+router.post('/:id/target', async (req, res) => {
+    try {
+        const { targetPrice } = req.body;
+        const id = parseInt(req.params.id);
+
+        await prisma.product.update({
+            where: { id: id },
+            data: { targetPrice: parseFloat(targetPrice) }
+        });
+
+        console.log(`🎯 Target Price Set: ID ${id} -> ${targetPrice} TL`);
+        res.json({ message: "Target price set" });
+    } catch (e) {
+        console.error("Target Price set failed:", e);
+        res.status(500).json({ error: "Failed to set target price" });
+    }
+});
+
 // 1.5 Get Single Product (Moved to bottom)
+// 10. Analysis
+router.get('/:id/analysis', async (req, res) => {
+    try {
+        const analysis = await analyzePrice(req.params.id);
+        res.json(analysis);
+    } catch (e) {
+        res.status(500).json({ error: "Analysis failed" });
+    }
+});
+
+// 11. Alternatives
+router.get('/:id/alternatives', async (req, res) => {
+    try {
+        const product = await prisma.product.findUnique({ where: { id: parseInt(req.params.id) } });
+        if (!product) return res.status(404).json({ error: "Product not found" });
+
+        const alternatives = await findAlternatives(product.title, product.source);
+        res.json(alternatives);
+    } catch (e) {
+        res.status(500).json({ error: "Alternatives failed" });
+    }
+});
+
 router.get('/:id', async (req, res) => {
     try {
         const product = await prisma.product.findUnique({
