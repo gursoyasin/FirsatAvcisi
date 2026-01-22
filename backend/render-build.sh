@@ -2,6 +2,8 @@
 # exit on error
 set -o errexit
 
+# Clean install
+rm -rf node_modules
 npm install
 
 # Install Chrome for Puppeteer explicitly
