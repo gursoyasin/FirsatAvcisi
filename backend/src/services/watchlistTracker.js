@@ -1,6 +1,5 @@
 const prisma = require('../config/db');
-const browserService = require('./scraper/BrowserService');
-const cheerio = require('cheerio');
+const { scrapeProduct } = require('./scraper/index');
 
 // Hardcoded VIP List (Synced with user.js)
 const VIP_EMAILS = [
@@ -52,8 +51,9 @@ async function checkWatchlistPrices(forProUsers) {
 
         for (const product of productsToCheck) {
             try {
-                // 2. Scrape current price
-                const currentScrapedPrice = await scrapeCurrentPrice(product.url);
+                // 2. Scrape current price using the unified scraper
+                const scrapedData = await scrapeProduct(product.url);
+                const currentScrapedPrice = scrapedData.currentPrice;
 
                 if (!currentScrapedPrice || currentScrapedPrice <= 0) {
                     console.log(`⚠️ Could not scrape price for ${product.id} - ${product.url}`);
@@ -114,72 +114,6 @@ async function checkWatchlistPrices(forProUsers) {
     } catch (error) {
         console.error("❌ Watchlist Tracker Error:", error);
     }
-}
-
-// Simple scraper for check
-async function scrapeCurrentPrice(url) {
-    let page;
-    try {
-        page = await browserService.createPage();
-        // Faster timeout for tracker
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-        const content = await page.content();
-        const $ = cheerio.load(content);
-
-        // Try common price selectors
-        const selectors = [
-            '.product-price', '.price', '.prc-dsc', '.current-price',
-            '[data-testid="price"]', '.product-price-container',
-            '.price-current', '.m-productPrice__salePrice', '.product__price--sale'
-        ];
-
-        let price = 0;
-        for (const sel of selectors) {
-            const text = $(sel).first().text().trim();
-            if (text) {
-                price = parsePrice(text);
-                if (price > 0) break;
-            }
-        }
-
-        // Generic text search fallback
-        if (price === 0) {
-            const bodyText = $('body').text();
-            const cleanText = bodyText.replace(/\s+/g, ' ');
-            // Look for Turkish Price Format (1.250,90 TL or 1250 TL) heavily
-            const matches = cleanText.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/ig);
-            if (matches && matches.length > 0) {
-                // Takes the first logical price found that is reasonable?
-                // This is risky, but better than 0 for tracker.
-                // Let's filter for prices found near "price" keywords if possible, but for now just parse first.
-                price = parsePrice(matches[0]);
-            }
-        }
-
-        await page.close();
-        return price;
-
-    } catch (e) {
-        if (page) await page.close();
-        return 0;
-    }
-}
-
-function parsePrice(text) {
-    if (!text) return 0;
-    let clean = text.replace('TL', '').replace('₺', '').replace('TRY', '').trim();
-    if (clean.includes(',') && clean.includes('.')) {
-        if (clean.lastIndexOf(',') > clean.lastIndexOf('.')) {
-            clean = clean.replace(/\./g, '').replace(',', '.');
-        } else {
-            clean = clean.replace(/,/g, '');
-        }
-    } else if (clean.includes(',')) {
-        clean = clean.replace(',', '.');
-    }
-    const match = clean.match(/(\d+\.?\d*)/);
-    return match ? parseFloat(match[0]) : 0;
 }
 
 module.exports = { checkProWatchlist, checkFreeWatchlist };
