@@ -21,7 +21,7 @@ const scraperService = require('./services/scraper');
 const trackerService = require('./services/tracker');
 
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', true); // More robust for Render/Cloudflare
 const PORT = process.env.PORT || 3000;
 
 // Security & Optimization Middleware

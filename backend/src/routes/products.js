@@ -79,6 +79,7 @@ router.get('/', async (req, res) => {
 // 2. Add Product
 router.post('/', async (req, res) => {
     try {
+        console.log("📥 Incoming Product POST:", JSON.stringify(req.body));
         let { url, title, price, imageUrl, source, inStock, originalPrice, targetPrice } = req.body;
         let productData = { url, title, price, imageUrl, source, inStock, originalPrice };
 
@@ -144,11 +145,12 @@ router.post('/', async (req, res) => {
                 originalPrice: parseFloat(productData.originalPrice || productData.currentPrice) || 0,
                 targetPrice: targetPrice ? parseFloat(targetPrice) : null,
                 userEmail: userEmail,
-                isSystem: false, // Ensure it's marked as a user product
+                isSystem: false,
                 category: productData.category || "diger",
                 history: { create: { price: numericPrice } }
             }
         });
+        console.log("✅ Product Created Successfully ID:", product.id);
         res.json(product);
     } catch (error) {
         console.error("Save error:", error);
