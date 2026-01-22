@@ -115,6 +115,9 @@ router.post('/', async (req, res) => {
             if (count >= 3) return res.status(403).json({ error: "LIMIT_REACHED", message: "Ücretsiz plan limiti doldu. Premium'a geçin!" });
         }
 
+        // SANITIZE: Remove 'price' from productData as it's handled by 'currentPrice' and 'originalPrice'
+        delete productData.price;
+
         // Upsert Logic: If this user already tracks this URL, update it.
         const existingUserProduct = await prisma.product.findFirst({
             where: { url: url, userEmail: userEmail }
@@ -127,7 +130,8 @@ router.post('/', async (req, res) => {
                     currentPrice: numericPrice,
                     title: productData.title || existingUserProduct.title,
                     imageUrl: productData.imageUrl || existingUserProduct.imageUrl,
-                    updatedAt: new Date()
+                    updatedAt: new Date(),
+                    inStock: true
                 }
             });
             return res.json(updated);

@@ -21,6 +21,7 @@ const scraperService = require('./services/scraper');
 const trackerService = require('./services/tracker');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Security & Optimization Middleware
