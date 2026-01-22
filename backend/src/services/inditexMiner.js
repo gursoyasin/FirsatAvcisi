@@ -1,6 +1,7 @@
 const prisma = require('../config/db');
 const { detectGender } = require('./scraper/index');
 const browserService = require('./scraper/BrowserService');
+console.log(`🔍 InditexMiner: browserService type = ${typeof browserService}`);
 
 // URLs for "Special Prices" / "Sale" sections
 const TARGETS = [
@@ -260,7 +261,7 @@ async function mineCategory(target) {
                             category: 'moda'
                         });
                     } else {
-                        console.log(`⚠️ Skipping Item ${index}: Missing Title/Price, URL, Junk or Invalid URL.`);
+                        console.log(`⚠️ Skipping Item ${index}: Missing Title/Price/URL. HTML Preview: ${el.outerHTML ? el.outerHTML.substring(0, 150) : 'N/A'}...`);
                     }
                 } catch (e) { console.log(`❌ Error processing item ${index}:`, e.message); }
             });

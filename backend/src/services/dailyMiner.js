@@ -1,6 +1,7 @@
 const prisma = require('../config/db');
 const { detectGender } = require('./scraper/index');
 const browserService = require('./scraper/BrowserService');
+console.log(`🔍 DailyMiner: browserService type = ${typeof browserService}`);
 
 // ==========================================
 // 🎯 TARGET MAP (30+ BRANDS)
