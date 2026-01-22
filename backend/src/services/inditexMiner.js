@@ -61,6 +61,7 @@ async function mineCategory(target) {
     let page;
     try {
         page = await browserService.createPage();
+        console.log("⚡️⚡️ INDITEX MINER V3.1 (SKELETON FIX) LOADED ⚡️⚡️");
 
         // 1. Headers & Cookies (Copied from scraper/index.js logic)
         await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
