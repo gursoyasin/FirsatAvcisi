@@ -139,12 +139,21 @@ async function mineCategory(target) {
         await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
         // 3. Scroll to load lazy items
+        console.log("Waiting 3s for initial DOM...");
+        try {
+            // Inditex/Bershka specific wait for real price or non-skeleton product
+            await page.waitForSelector('.product-grid-product, .grid-card, .price-current, .product-price, .product-item:not(.skeleton)', { timeout: 8000 });
+            console.log("✅ Grid content detected.");
+        } catch (e) {
+            console.log("⚠️ Timeout waiting for specific grid selector (could be skeleton or slow), proceeding...");
+        }
+
         await autoScroll(page);
 
         // 4. EXTRACTION (In-Browser)
         const products = await page.evaluate((source, config) => {
             const items = [];
-            const results = []; // Use Set for uniqueness? Array for now.
+            const results = [];
 
             // --- BEAST MODE IMAGE EXTRACTOR ---
             function getBestImage(container) {
@@ -175,17 +184,31 @@ async function mineCategory(target) {
             let priceSels = config ? config.price : ['.price', '.current-price', '.product-price'];
 
             // Find all potential product cards
-            const cards = document.querySelectorAll(containerSel);
+            let cards = Array.from(document.querySelectorAll(containerSel));
+
+            // --- SKELETON FILTER ---
+            // Remove any card that looks like a skeleton/loader
+            cards = cards.filter(c => {
+                const cls = c.className || "";
+                return !cls.includes('skeleton') && !cls.includes('loading') && !cls.includes('placeholder');
+            });
+
+            console.log(`🔎 Found ${cards.length} potential cards (after filtering skeletons).`);
 
             cards.forEach(card => {
                 try {
                     // LINK
                     let link = card.querySelector('a')?.href;
                     if (!link && card.tagName === 'A') link = card.href;
+
+                    // Fallback: Check parent if card is inside an A
+                    if (!link) link = card.closest('a')?.href;
+
                     if (!link) return;
+                    if (link.includes('javascript:') || link.includes('#')) return;
 
                     // TITLE
-                    let title = card.querySelector('.product-title, .product-name, .name, h2, h3, .info')?.innerText || "";
+                    let title = card.querySelector('.product-title, .product-name, .name, h2, h3, .info, .product-description')?.innerText || "";
                     if (!title) title = card.innerText.split('\n')[0];
 
                     // PRICE
@@ -241,10 +264,20 @@ async function mineCategory(target) {
 
             // --- GENERIC FALLBACK (IF 0 ITEMS) ---
             if (results.length === 0) {
+                console.log("⚠️ Zero items with config. Trying generic fallback...");
                 const genericSelector = 'a[href*="/p/"], a[href*="-p"], .product-card, .product-item, .grid-item, li.product-item, div[class*="product"]';
-                const elements = document.querySelectorAll(genericSelector);
+                let elements = Array.from(document.querySelectorAll(genericSelector));
+
+                // Skeleton Filter again
+                elements = elements.filter(c => {
+                    const cls = c.className || "";
+                    return !cls.includes('skeleton') && !cls.includes('loading');
+                });
+
                 elements.forEach(el => {
                     let link = el.tagName === 'A' ? el.href : el.querySelector('a')?.href;
+                    if (!link) link = el.closest('a')?.href;
+
                     if (!link) return;
 
                     // Look for price in the element
@@ -280,6 +313,14 @@ async function mineCategory(target) {
         }, target.source, MINER_CONFIGS[target.source]); // PASS CONFIG HERE
 
         console.log(`✨ Found ${products.length} items for ${target.source}`);
+
+        // DEBUG SNAPSHOT
+        if (products.length === 0) {
+            const bodyPreview = await page.evaluate(() => {
+                return document.body.innerText.substring(0, 1000).replace(/\n/g, ' ') + ' || HTML: ' + document.body.innerHTML.substring(0, 500);
+            });
+            console.log(`⚠️ ZERO PRODUCTS DEBUG (Snapshot): ${bodyPreview}`);
+        }
 
         // 5. DB Upsert
         let count = 0;
