@@ -85,11 +85,18 @@ async function mineCategory(target) {
         console.log(`📄 Page Title: ${pageTitle}`);
 
         // 3. Scroll to load lazy content (MASS LOAD)
-        console.log("Waiting 5s for initial load...");
-        await new Promise(r => setTimeout(r, 5000));
+        console.log("Waiting 3s for initial DOM...");
+
+        // Wait for real content to appear (Inditex specific: price element usually means hydration is done)
+        try {
+            await page.waitForSelector('.product-grid-product, .grid-card, .price-elem, .product-price, .product-item', { timeout: 10000 });
+            console.log("✅ Grid content detected.");
+        } catch (e) {
+            console.log("⚠️ Timeout waiting for specific grid selector, proceeding anyway...");
+        }
 
         console.log("🔄 Starting mass scroll for more products...");
-        for (let s = 0; s < 3; s++) { // Reduced to 3 for stability on Free Tier
+        for (let s = 0; s < 3; s++) {
             await autoScroll(page);
             console.log(`Scrolling... (${s + 1}/3)`);
             await new Promise(r => setTimeout(r, 2000));
@@ -100,10 +107,18 @@ async function mineCategory(target) {
             const items = [];
 
             // Universal Selectors for Inditex Brands
-            const productSelector = '.grid-product, .product-card-figure, .category-product-card, .grid-card, .product-grid-product, li.product-grid-product, legacy-product, .c-tile--product, article.product, .product-item, div[class*="product-card"], a[class*="product-link"]';
+            // UPDATED: Exclude 'skeleton' logic
+            const productSelector = '.grid-product, .product-card-figure, .category-product-card, .grid-card, .product-grid-product, li.product-grid-product:not(.skeleton-product-card), legacy-product, .c-tile--product, article.product, .product-item, a[class*="product-link"]';
 
-            let elements = document.querySelectorAll(productSelector);
-            console.log(`🔎 Found ${elements.length} primary elements.`);
+            let elements = Array.from(document.querySelectorAll(productSelector));
+
+            // Filter out skeletons or loading states aggressively
+            elements = elements.filter(el => {
+                const cls = el.className || "";
+                return !cls.includes('skeleton') && !cls.includes('loading') && !cls.includes('placeholder');
+            });
+
+            console.log(`🔎 Found ${elements.length} primary elements (after skeleton filtering).`);
 
             // FALLBACK: If specific selectors fail, try generic "Link > Image" pattern
             if (elements.length === 0) {
@@ -114,13 +129,6 @@ async function mineCategory(target) {
                 });
                 elements = potentialLinks;
                 console.log(`🔎 Found ${elements.length} fallback elements via Link+Image heuristic.`);
-            }
-
-            // SUPER FALLBACK: If still 0, grab ANYTHING that looks like a product card
-            if (elements.length === 0) {
-                console.log("⚠️ SUPER FALLBACK: Trying generic class matching...");
-                elements = document.querySelectorAll('div[class*="product"], li[class*="product"], article, div[data-id]');
-                console.log(`🔎 Found ${elements.length} generic elements.`);
             }
 
             elements.forEach((el, index) => {
