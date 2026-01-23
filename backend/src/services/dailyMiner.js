@@ -343,32 +343,38 @@ async function mineCategory(target) {
 
         // 5. DB Upsert
         let count = 0;
+        let updatedCount = 0;
         for (const p of products) {
-            const existing = await prisma.product.findFirst({ where: { url: p.url } });
-            if (existing) {
-                await prisma.product.update({
-                    where: { id: existing.id },
-                    data: { currentPrice: p.price, updatedAt: new Date(), inStock: true }
-                });
-            } else {
-                await prisma.product.create({
-                    data: {
-                        title: p.title,
-                        url: p.url,
-                        currentPrice: p.price,
-                        originalPrice: p.price * 1.25, // Mock OG price
-                        imageUrl: p.imageUrl,
-                        source: p.source,
-                        gender: detectGender(p.url, p.title),
-                        userEmail: 'bot',
-                        isSystem: true,
-                        history: { create: { price: p.price } }
-                    }
-                });
-                count++;
+            try {
+                const existing = await prisma.product.findFirst({ where: { url: p.url } });
+                if (existing) {
+                    await prisma.product.update({
+                        where: { id: existing.id },
+                        data: { currentPrice: p.price, updatedAt: new Date(), inStock: true }
+                    });
+                    updatedCount++;
+                } else {
+                    await prisma.product.create({
+                        data: {
+                            title: p.title,
+                            url: p.url,
+                            currentPrice: p.price,
+                            originalPrice: p.price * 1.25, // Mock OG price
+                            imageUrl: p.imageUrl,
+                            source: p.source,
+                            gender: detectGender(p.url, p.title),
+                            userEmail: 'bot',
+                            isSystem: true,
+                            history: { create: { price: p.price } }
+                        }
+                    });
+                    count++;
+                }
+            } catch (err) {
+                console.error(`❌ Failed to save item: ${p.title} - ${err.message}`);
             }
         }
-        console.log(`💾 Saved ${count} new.`);
+        console.log(`💾 Saved ${count} new, Updated ${updatedCount} existing.`);
 
     } catch (e) {
         console.error(`Error processing ${target.source}: ${e.message}`);

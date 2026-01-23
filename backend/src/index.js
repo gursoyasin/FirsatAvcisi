@@ -22,7 +22,7 @@ const trackerService = require('./services/tracker');
 const healthRoutes = require('./routes/health');
 
 const app = express();
-app.set('trust proxy', true); // More robust for Render/Cloudflare
+app.set('trust proxy', 1); // Exact count for Render Load Balancer
 const PORT = process.env.PORT || 3000;
 
 // Security & Optimization Middleware
