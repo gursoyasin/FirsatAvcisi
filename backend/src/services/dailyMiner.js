@@ -67,13 +67,25 @@ async function mineAllBrands() {
     const shuffled = TARGETS.sort(() => Math.random() - 0.5);
 
     for (const target of shuffled) {
-        try {
-            console.log(`⛏️ Mining: ${target.source.toUpperCase()}`);
-            await mineCategory(target);
-            await new Promise(r => setTimeout(r, 4000)); // Polite delay
-        } catch (error) {
-            console.error(`❌ Global Miner Error (${target.source}):`, error.message);
+        let attempts = 0;
+        let success = false;
+        while (attempts < 2 && !success) {
+            try {
+                attempts++;
+                if (attempts > 1) console.log(`🔄 Retrying ${target.source.toUpperCase()} (Attempt ${attempts})...`);
+
+                console.log(`⛏️ Mining: ${target.source.toUpperCase()}`);
+                const count = await mineCategory(target);
+
+                if (count > 0 || count === -1) success = true; // -1 means no error but maybe authentic 0 items
+
+                if (!success) await new Promise(r => setTimeout(r, 5000)); // Wait before retry
+            } catch (error) {
+                console.error(`❌ Global Miner Error (${target.source}):`, error.message);
+                if (attempts === 2) console.error(`💀 Gave up on ${target.source} after 2 attempts.`);
+            }
         }
+        await new Promise(r => setTimeout(r, 4000)); // Polite delay between brands
     }
     console.log("🏁 CHRONO MINER: Cycle Completed.");
 }
@@ -375,9 +387,11 @@ async function mineCategory(target) {
             }
         }
         console.log(`💾 Saved ${count} new, Updated ${updatedCount} existing.`);
+        return products.length;
 
     } catch (e) {
         console.error(`Error processing ${target.source}: ${e.message}`);
+        return 0; // Return 0 to trigger retry
     } finally {
         if (page) await page.close();
     }

@@ -40,7 +40,10 @@ class BrowserService {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--window-size=1920,1080',
-            '--lang=tr-TR' // FORCE TURKISH LOCALE NATIVELY
+            '--lang=tr-TR', // FORCE TURKISH LOCALE NATIVELY
+            '--disable-blink-features=AutomationControlled', // CRITICAL: Hides "Chrome is being controlled by automated software"
+            '--no-first-run',
+            '--no-default-browser-check'
         ];
 
         // If we have proxies, rotate them
