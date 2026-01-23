@@ -127,10 +127,12 @@ async function scrapeProduct(url) {
             } catch (e) { console.log("Cookie set error:", e.message); }
         }
 
-        // REQUEST INTERCEPTION
+        // REQUEST INTERCEPTION (Aggressive Speed Mode)
         await page.setRequestInterception(true);
         page.on('request', (req) => {
-            if (['image', 'media', 'font'].includes(req.resourceType()) && !domain.includes('zara')) {
+            const resourceType = req.resourceType();
+            // Block everything not needed for HTML structure
+            if (['image', 'media', 'font', 'stylesheet', 'other'].includes(resourceType) && !domain.includes('zara')) {
                 req.abort();
             } else {
                 req.continue();
@@ -140,7 +142,7 @@ async function scrapeProduct(url) {
         console.log(`🚀 Gidiliyor: ${url}`);
 
         try {
-            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 50000 });
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 }); // 30s is more reasonable for cloud
         } catch (e) {
             console.log("⚠️ Navigasyon timeout (Devam ediliyor)...");
         }
