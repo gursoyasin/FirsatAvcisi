@@ -46,9 +46,9 @@ const TARGETS = [
     { source: "beymen", url: "https://www.beymen.com/tr/erkek-canta-10012?siralama=akilli-siralama&fiyat=indirimli", gender: "man" }, // Men Bags
     { source: "beymen", url: "https://www.beymen.com/tr/erkek-aksesuar-10013?siralama=akilli-siralama&fiyat=indirimli", gender: "man" }, // Men Acc
     { source: "beymenclub", url: "https://www.beymenclub.com/kadin-indirim", gender: "woman" },
-    { source: "vakko", url: "https://www.vakko.com/kadin-giyim-c-10/indirimli-urunler", gender: "woman" },
+    { source: "vakko", url: "https://www.vakko.com/kadin-giyim-c-10", gender: "woman" },
     { source: "damattween", url: "https://www.damattween.com/indirim", gender: "man" },
-    { source: "sarar", url: "https://shop.sarar.com/kadin-indirim", gender: "woman" },
+    { source: "sarar", url: "https://sarar.com/kadin-indirimli-urunler", gender: "woman" },
     { source: "ramsey", url: "https://www.ramsey.com.tr/indirim", gender: "man" },
 
     // --- SPORTS ---
@@ -167,9 +167,29 @@ async function mineCategory(target) {
                 const overlay = document.getElementById('INDblindNotif') || document.getElementById('INDWrap');
                 if (overlay) overlay.remove();
 
-                const buttons = Array.from(document.querySelectorAll('button'));
-                const closeBtn = buttons.find(b => b.innerText.includes('Kapat') || b.innerText.includes('Close') || b.innerText.includes('X'));
-                if (closeBtn) closeBtn.click();
+                const buttons = Array.from(document.querySelectorAll('button, div[role="button"], a[role="button"]'));
+                buttons.forEach(b => {
+                    const t = b.innerText.toLowerCase();
+                    if (t.includes('erişilebilirlik') || t.includes('accessibility') || t.includes('kapat') || t.includes('close')) {
+                        // Only click if it looks like a modal closer or accessibility toggle
+                        if (b.getAttribute('aria-label')?.includes('erişilebilirlik') || t.includes('modu')) {
+                            b.click();
+                        }
+                    }
+                });
+
+                // 3. Damat Tween & Generic Overlays
+                const blindBtn = document.querySelector('button[aria-label*="erişilebilirlik"]');
+                if (blindBtn) blindBtn.click();
+
+                // 4. Force Remove Fixed Overlays
+                const fixed = Array.from(document.querySelectorAll('div')).filter(bs => {
+                    const style = window.getComputedStyle(bs);
+                    return style.position === 'fixed' && style.zIndex > 999;
+                });
+                fixed.forEach(f => {
+                    if (f.innerText.includes('erişilebilirlik') || f.innerText.includes('cookies')) f.remove();
+                });
             });
             await new Promise(r => setTimeout(r, 1000));
         } catch (e) { }

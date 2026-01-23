@@ -175,11 +175,23 @@ async function scrapeProduct(url) {
             }
         }
 
-        // 3.5. SPLASH SCREEN / ACCESSIBILITY KILLER
+        // 3.5. SPLASH SCREEN / ACCESSIBILITY KILLER V2
         try {
             await page.evaluate(() => {
                 const overlay = document.getElementById('INDblindNotif') || document.getElementById('INDWrap');
                 if (overlay) overlay.remove();
+
+                const blindBtn = document.querySelector('button[aria-label*="erişilebilirlik"]');
+                if (blindBtn) blindBtn.click();
+
+                // Generic Fixed Overlay Remover
+                const fixed = Array.from(document.querySelectorAll('div')).filter(bs => {
+                    const style = window.getComputedStyle(bs);
+                    return style.position === 'fixed' && style.zIndex > 999;
+                });
+                fixed.forEach(f => {
+                    if (f.innerText.includes('erişilebilirlik')) f.remove();
+                });
             });
         } catch (e) { }
 
