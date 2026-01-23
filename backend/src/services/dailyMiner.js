@@ -98,51 +98,187 @@ async function mineCategory(target) {
         // --- 1. CONFIGURATION INJECTION ---
         // We pass this into the browser context so the evaluator knows exactly what to look for
         const MINER_CONFIGS = {
-            // Inditex (Zara requires .product-grid-product, but sometimes it is just li)
-            'zara': { container: '.product-grid-product, li.product-item, .product-item, .product-grid-item, .product-grid-product-info', price: ['.price__amount--current', '.price-current__amount', '.money-amount__main', '.price-current'] },
-            'bershka': { container: 'div[data-id], .product-card, .grid-card, .product-item, .grid-product, .category-product-card', price: ['.current-price-elem', '.product-price', '.price-current', '.price-elem'] },
-            'pullandbear': { container: '.product-card, div.grid-product, div[data-id], .product-item, .grid-product-info', price: ['.price-current', '.product-price', '.current-price', '.price-elem'] },
-            'stradivarius': { container: '.product-item, div[name="product-item"], .grid-product', price: ['.price-current', '.product-price', '.price-elem'] },
-            'massimodutti': { container: '.product-item, .product-card, .grid-product', price: ['.product-price', '.price-current', '.price-elem'] },
-            'oysho': { container: '.product-item, .grid-element, .product-card', price: ['.price-current', '.product-price', '.price-elem'] },
-            'zarahome': { container: '.product-item, .grid-item', price: ['.price-current', '.product-price', '.price-elem'] },
-            'lefties': { container: '.product-item, .product-card', price: ['.price-current', '.product-price', '.price-elem'] },
+            // --- INDITEX (ZARA, BERSHKA, PULL&BEAR, etc) ---
+            'zara': {
+                container: '.product-grid-product, li.product-item, .product-item',
+                price: ['.price-current__amount', '.price__amount--current', '.money-amount__main'],
+                originalPrice: ['.price-old__amount', '.price__amount--strikethrough', '.money-amount__original']
+            },
+            'bershka': {
+                container: 'div[data-id], .product-card, .grid-card',
+                price: ['.current-price-elem', '.product-price', '.price-current'],
+                originalPrice: ['.old-price-elem', '.price-old', '.price-through']
+            },
+            'pullandbear': {
+                container: '.product-card, div.grid-product, div[data-id]',
+                price: ['.price-current', '.product-price', '.current-price'],
+                originalPrice: ['.price-old', '.product-price-old', '.old-price']
+            },
+            'stradivarius': {
+                container: '.product-item, div[name="product-item"]',
+                price: ['.price-current', '.product-price'],
+                originalPrice: ['.price-old', '.product-price-old']
+            },
+            'massimodutti': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price-current'],
+                originalPrice: ['.price-old', '.product-price-old']
+            },
+            'oysho': {
+                container: '.product-item, .grid-element',
+                price: ['.price-current', '.product-price'],
+                originalPrice: ['.price-old', '.old-price']
+            },
+            'zarahome': {
+                container: '.product-item, .grid-item',
+                price: ['.price-current', '.product-price'],
+                originalPrice: ['.price-old', '.product-price-old']
+            },
+            'lefties': {
+                container: '.product-item, .product-card',
+                price: ['.price-current', '.product-price'],
+                originalPrice: ['.price-old', '.product-price-old']
+            },
 
-            // Global
-            'hm': { container: 'article.hm-product-item, .product-item, li.product-item, .hm-product-item', price: ['.price-value', '.item-price'] },
-            'mango': { container: 'li.product-card, div[class*="product-card"], .product-card, .product-list-item', price: ["span[data-testid='current-price']", '.text-body-m', '.product-price', '.price', 'span[class*="price"]'] },
-            'jackjones': { container: 'article.product-item, .product-tile, .product-card', price: ['.product-price', '.price', '.sales-price'] },
+            // --- GLOBAL FASHION ---
+            'hm': {
+                container: 'article.hm-product-item, .product-item',
+                price: ['.price-value', '.item-price'],
+                originalPrice: ['.price-regular', '.regular-price']
+            },
+            'mango': {
+                container: 'li.product-card, .product-card',
+                price: ["span[data-testid='current-price']", '.text-body-m'],
+                originalPrice: ["span[data-testid='original-price']", '.text-body-s-crossed']
+            },
+            'jackjones': {
+                container: 'article.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price', '.standard-price']
+            },
 
-            // TR Mass
-            'lcwaikiki': { container: '.product-card, .create-product-card, .product-item-wrapper', price: ['.product-price', '.price', '.current-price'] },
-            'defacto': { container: '.product-card, .catalog-product-item, div.product-card', price: ['.product-price', '.sale-price', '.product-card-price'] },
-            'koton': { container: '.product-item, .product-card, div.product', price: ['.product-price', '.new-price', '.price'] },
-            'colins': { container: '.product-box, .product-item, .colins-product-card', price: ['.product-price', '.price'] },
-            'mavi': { container: '.product-card, .card, .product-item', price: ['.price', '.current-price', '.product-price'] },
-            'loft': { container: '.product-item, .product-card', price: ['.price', '.current-price', '.product-price'] },
+            // --- TR MASS MARKET ---
+            'lcwaikiki': {
+                container: '.product-card, .create-product-card',
+                price: ['.product-price', '.price', '.current-price'],
+                originalPrice: ['.raw-price', '.old-price']
+            },
+            'defacto': {
+                container: '.product-card, .catalog-product-item',
+                price: ['.product-price', '.sale-price'],
+                originalPrice: ['.product-card-first-price', '.old-price']
+            },
+            'koton': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.new-price'],
+                originalPrice: ['.old-price', '.first-price']
+            },
+            'colins': {
+                container: '.product-box, .product-item',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price', '.basket-price-old']
+            },
+            'mavi': {
+                container: '.product-card, .card',
+                price: ['.price', '.current-price'],
+                originalPrice: ['.old-price', '.price-strikethrough']
+            },
+            'loft': {
+                container: '.product-item, .product-card',
+                price: ['.price', '.current-price'],
+                originalPrice: ['.old-price']
+            },
 
-            // Premium/Network Groups
-            'network': { container: '.product__card, .product-item, .product-card, div.product', price: ['.product__price--sale', '.product__price', '.price', '.product-price'] },
-            'fabrika': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'boyner': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'twist': { container: '.product-item, .product-card, div.product', price: ['.product-price', '.price'] },
-            'ipekyol': { container: '.product-item, .product-card, div.product', price: ['.product-price', '.price'] },
+            // --- TR PREMIUM / NETWORK GROUP ---
+            'network': {
+                container: '.product__card, .product-item',
+                price: ['.product__price--sale', '.product__price'],
+                originalPrice: ['.product__price--old', '.old-price']
+            },
+            'fabrika': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'boyner': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.product-price-old', '.old-price']
+            },
+            'twist': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'ipekyol': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
 
-            // Luxury
-            'beymen': { container: '.m-productCard, .product-item, .o-productListComponent', price: ['.m-productPrice__salePrice', '.m-productPrice__price', '.m-productPrice', '.price'] },
-            'beymenclub': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'vakko': { container: '.product-item, .product-card, .pl-item', price: ['.product-price', '.price'] },
-            'damattween': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'sarar': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'ramsey': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
+            // --- LUXURY ---
+            'beymen': {
+                container: '.m-productCard, .product-item',
+                price: ['.m-productPrice__salePrice', '.m-productPrice__price'],
+                originalPrice: ['.m-productPrice__retailPrice', '.old-price']
+            },
+            'beymenclub': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'vakko': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'damattween': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'sarar': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'ramsey': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
 
-            // Sport
-            'nike': { container: '.product-card, .product-item, div.product-card', price: ['.product-price', '.is--current-price', '.css-11s12ax'] },
-            'adidas': { container: '.grid-item, .glass-product-card, .product-card', price: ['.gl-price-item--sale', '.gl-price-item', '.price'] },
-            'puma': { container: '.product-item, .product-card, .grid-tile', price: ['.price', '.product-price'] },
-            'newbalance': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'underarmour': { container: '.product-item, .product-card', price: ['.product-price', '.price'] },
-            'lesbenjamins': { container: '.product-item, .product-card', price: ['.product-price', '.price'] }
+            // --- SPOR ---
+            'nike': {
+                container: '.product-card, .product-item',
+                price: ['.product-price', '.is--current-price'],
+                originalPrice: ['.is--striked-out', '.css-1h931v8'] // Robust fallback needed
+            },
+            'adidas': {
+                container: '.grid-item, .product-card',
+                price: ['.gl-price-item--sale', '.gl-price-item'],
+                originalPrice: ['.gl-price-item--crossed']
+            },
+            'puma': {
+                container: '.product-item, .product-card',
+                price: ['.price', '.product-price'],
+                originalPrice: ['.old-price']
+            },
+            'newbalance': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'underarmour': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.old-price']
+            },
+            'lesbenjamins': {
+                container: '.product-item, .product-card',
+                price: ['.product-price', '.price'],
+                originalPrice: ['.compare-at-price', '.old-price']
+            }
         };
 
         // 2. Navigation
@@ -266,6 +402,20 @@ async function mineCategory(target) {
                             break;
                         }
                     }
+
+                    // ORIGINAL PRICE (REAL DATA - NO MOCKS)
+                    let originalPriceText = "";
+                    let originalPriceSels = config ? config.originalPrice : ['.old-price', '.price-old', '.crossed-out'];
+                    if (originalPriceSels) {
+                        for (const sel of originalPriceSels) {
+                            const el = card.querySelector(sel);
+                            if (el && el.innerText.match(/\d/)) {
+                                originalPriceText = el.innerText;
+                                break;
+                            }
+                        }
+                    }
+
                     // Fallback: Check raw text for price pattern
                     if (!priceText) {
                         const raw = card.innerText;
@@ -277,28 +427,35 @@ async function mineCategory(target) {
                     const img = getBestImage(card);
 
                     if (link && priceText) {
-                        // Robust Price Cleaning
-                        let cleanPrice = 0;
-                        const pClean = priceText.replace(/[^\d.,]/g, '').replace(/\s/g, '').trim();
-                        if (pClean.includes(',') && pClean.includes('.')) {
-                            // TR Format: 1.250,90
-                            if (pClean.lastIndexOf(',') > pClean.lastIndexOf('.')) {
-                                cleanPrice = parseFloat(pClean.replace(/\./g, '').replace(',', '.'));
+                        // Robust Price Cleaning Helper
+                        const cleanP = (txt) => {
+                            if (!txt) return 0;
+                            const pClean = txt.replace(/[^\d.,]/g, '').replace(/\s/g, '').trim();
+                            if (pClean.includes(',') && pClean.includes('.')) {
+                                if (pClean.lastIndexOf(',') > pClean.lastIndexOf('.')) {
+                                    return parseFloat(pClean.replace(/\./g, '').replace(',', '.'));
+                                } else {
+                                    return parseFloat(pClean.replace(/,/g, ''));
+                                }
+                            } else if (pClean.includes(',')) {
+                                return parseFloat(pClean.replace(',', '.'));
                             } else {
-                                // US Format: 1,250.90
-                                cleanPrice = parseFloat(pClean.replace(/,/g, ''));
+                                return parseFloat(pClean);
                             }
-                        } else if (pClean.includes(',')) {
-                            cleanPrice = parseFloat(pClean.replace(',', '.'));
-                        } else {
-                            cleanPrice = parseFloat(pClean);
-                        }
+                        };
+
+                        let cleanPrice = cleanP(priceText);
+                        let cleanOriginalPrice = cleanP(originalPriceText);
+
+                        // Sanity Check: If original price is not found or less than current, use current or null
+                        if (cleanOriginalPrice < cleanPrice) cleanOriginalPrice = null;
 
                         if (cleanPrice > 10) {
                             results.push({
                                 title: title || source.toUpperCase() + " Ürünü",
                                 url: link,
                                 price: cleanPrice,
+                                originalPrice: cleanOriginalPrice, // REAL DATA
                                 imageUrl: img,
                                 source: source
                             });
@@ -405,7 +562,7 @@ async function mineCategory(target) {
                             title: p.title,
                             url: p.url,
                             currentPrice: p.price,
-                            originalPrice: p.price * 1.25, // Mock OG price
+                            originalPrice: p.originalPrice || p.price, // Use REAL original price or fallback to current
                             imageUrl: p.imageUrl,
                             source: p.source,
                             gender: detectGender(p.url, p.title),

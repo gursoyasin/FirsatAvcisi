@@ -8,9 +8,9 @@ const cheerio = require('cheerio');
 // Yeni marka eklemek için sadece bu listeye ekleme yapmak yeterlidir.
 const BRAND_CONFIGS = {
     // --- INDITEX GRUBU ---
-    'zara.com': { source: 'zara', useCookies: true, selectors: { price: ['.price-current__amount', '.money-amount__main'], originalPrice: ['.price-old__amount', '.price__amount--strikethrough'] } },
-    'bershka.com': { source: 'bershka', useCookies: true, selectors: { price: ['.current-price-elem', '.product-price', '.price-current'], originalPrice: ['.old-price-elem', '.price-old'] } },
-    'pullandbear.com': { source: 'pullandbear', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
+    'zara.com': { source: 'zara', useCookies: true, selectors: { price: ['.price-current__amount', '.price__amount--current'], originalPrice: ['.price-old__amount', '.price__amount--strikethrough'] } },
+    'bershka.com': { source: 'bershka', useCookies: true, selectors: { price: ['.current-price-elem', '.product-price'], originalPrice: ['.old-price-elem', '.price-old'] } },
+    'pullandbear.com': { source: 'pullandbear', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old', '.old-price'] } },
     'stradivarius.com': { source: 'stradivarius', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
     'massimodutti.com': { source: 'massimodutti', useCookies: true, selectors: { price: ['.product-price', '.price-current'], originalPrice: ['.price-old'] } },
     'oysho.com': { source: 'oysho', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
@@ -18,48 +18,49 @@ const BRAND_CONFIGS = {
     'lefties.com': { source: 'lefties', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
 
     // --- GLOBAL MODA ---
-    'hm.com': { source: 'hm', selectors: { price: ['#product-price .price-value', '.price-value', '.item-price'], img: ['figure.pdp-image img'] } },
-    'mango.com': { source: 'mango', selectors: { price: ["span[data-testid='current-price']", '.product-price', '.text-body-m'] } },
-    'jackjones.com': { source: 'jackjones', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'] } },
+    'hm.com': { source: 'hm', selectors: { price: ['#product-price .price-value', '.price-value'], originalPrice: ['.price-regular', '.regular-price'] } },
+    'mango.com': { source: 'mango', selectors: { price: ["span[data-testid='current-price']", '.text-body-m'], originalPrice: ["span[data-testid='original-price']", '.text-body-s-crossed'] } },
+    'jackjones.com': { source: 'jackjones', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
 
     // --- TÜRK DEVLERİ & PREMIUM ---
-    'lcwaikiki.com': { source: 'lcwaikiki', selectors: { title: ['h1.product-title'], price: ['.product-price', '.price', '.basket-price'] } },
-    'defacto.com.tr': { source: 'defacto', selectors: { title: ['h1.product-name'], price: ['.product-price', '.sale-price', '.product-card-price'] } },
+    'lcwaikiki.com': { source: 'lcwaikiki', selectors: { title: ['h1.product-title'], price: ['.product-price', '.price'], originalPrice: ['.raw-price', '.old-price'] } },
+    'defacto.com.tr': { source: 'defacto', selectors: { title: ['h1.product-name'], price: ['.product-price', '.sale-price'], originalPrice: ['.product-card-first-price', '.old-price'] } },
     'defacto.com': { source: 'defacto' },
-    'koton.com': { source: 'koton', selectors: { title: ['h1.product-name'], price: ['.product-price', '.new-price', '.price'] } },
-    'colins.com.tr': { source: 'colins', selectors: { price: ['.product-price', '.price'] } },
-    'mavi.com': { source: 'mavi', selectors: { price: ['.price', '.current-price', '.product-price'] } },
-    'loft.com.tr': { source: 'loft', selectors: { price: ['.product-price', '.price', '.current-price'] } },
-    'twist.com.tr': { source: 'twist', selectors: { price: ['.product-price', '.price'] } },
-    'ipekyol.com.tr': { source: 'ipekyol', selectors: { price: ['.product-price', '.price'] } },
+    'koton.com': { source: 'koton', selectors: { title: ['h1.product-name'], price: ['.product-price', '.new-price'], originalPrice: ['.old-price', '.first-price'] } },
+    'colins.com.tr': { source: 'colins', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price', '.basket-price-old'] } },
+    'mavi.com': { source: 'mavi', selectors: { price: ['.price', '.current-price'], originalPrice: ['.old-price', '.price-strikethrough'] } },
+    'loft.com.tr': { source: 'loft', selectors: { price: ['.product-price', '.price', '.current-price'], originalPrice: ['.old-price'] } },
+    'twist.com.tr': { source: 'twist', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'ipekyol.com.tr': { source: 'ipekyol', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
 
     // NETWORK & BOYNER GRUBU
     'network.com.tr': {
         source: 'network',
         selectors: {
-            title: ['h1.product__title', '.product-details__title', '.product-name'],
-            price: ['.product__price--sale', '.product__price', '.product-price__current', '.price']
+            title: ['h1.product__title', '.product-details__title'],
+            price: ['.product__price--sale', '.product__price'],
+            originalPrice: ['.product__price--old', '.old-price']
         }
     },
-    'fabrika.com.tr': { source: 'fabrika', selectors: { price: ['.product-price', '.price'] } },
-    'boyner.com.tr': { source: 'boyner', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'] } },
+    'fabrika.com.tr': { source: 'fabrika', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'boyner.com.tr': { source: 'boyner', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'], originalPrice: ['.product-price-old', '.old-price'] } },
 
     // --- LÜKS & KLASİK ---
-    'beymen.com': { source: 'beymen', selectors: { title: ['h1.o-productDetail__title'], price: ['.m-productPrice__salePrice', '.m-productPrice__price'] } },
-    'beymenclub.com': { source: 'beymenclub', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'] } },
-    'vakko.com': { source: 'vakko', selectors: { price: ['.product-price', '.price'] } },
-    'damattween.com': { source: 'damattween', selectors: { price: ['.product-price', '.price'] } },
-    'sarar.com': { source: 'sarar', selectors: { price: ['.product-price', '.price'] } },
-    'ramsey.com.tr': { source: 'ramsey', selectors: { price: ['.product-price', '.price'] } },
+    'beymen.com': { source: 'beymen', selectors: { title: ['h1.o-productDetail__title'], price: ['.m-productPrice__salePrice', '.m-productPrice__price'], originalPrice: ['.m-productPrice__retailPrice', '.old-price'] } },
+    'beymenclub.com': { source: 'beymenclub', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'vakko.com': { source: 'vakko', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'damattween.com': { source: 'damattween', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'sarar.com': { source: 'sarar', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'ramsey.com.tr': { source: 'ramsey', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
 
     // --- SPOR ---
-    'nike.com': { source: 'nike', selectors: { title: ['h1#pdp_product_title'], price: ['.product-price', '.is--current-price'] } },
-    'adidas.com.tr': { source: 'adidas', selectors: { title: ['h1[data-auto-id="product-title"]'], price: ['.gl-price-item--sale', '.gl-price-item'] } },
-    'puma.com': { source: 'puma', selectors: { price: ['.price', '.product-price'] } },
-    'newbalance.com.tr': { source: 'newbalance', selectors: { price: ['.product-price', '.price'] } },
-    'underarmour.com.tr': { source: 'underarmour', selectors: { price: ['.product-price', '.price'] } },
-    'lesbenjamins.com': { source: 'lesbenjamins', selectors: { price: ['.product-price', '.price'] } },
-    'superstep.com.tr': { source: 'superstep', selectors: { price: ['.product-price', '.price'] } }
+    'nike.com': { source: 'nike', selectors: { title: ['h1#pdp_product_title'], price: ['.product-price', '.is--current-price'], originalPrice: ['.is--striked-out'] } },
+    'adidas.com.tr': { source: 'adidas', selectors: { title: ['h1[data-auto-id="product-title"]'], price: ['.gl-price-item--sale', '.gl-price-item'], originalPrice: ['.gl-price-item--crossed'] } },
+    'puma.com': { source: 'puma', selectors: { price: ['.price', '.product-price'], originalPrice: ['.old-price'] } },
+    'newbalance.com.tr': { source: 'newbalance', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'underarmour.com.tr': { source: 'underarmour', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
+    'lesbenjamins.com': { source: 'lesbenjamins', selectors: { price: ['.product-price', '.price'], originalPrice: ['.compare-at-price', '.old-price'] } },
+    'superstep.com.tr': { source: 'superstep', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } }
 };
 
 async function scrapeProduct(url) {
@@ -251,7 +252,7 @@ async function scrapeProduct(url) {
                     if (t) price = parsePrice(t);
                 });
             }
-            if (!originalPrice && brandConfig.selectors.originalPrice) {
+            if (brandConfig.selectors.originalPrice) {
                 brandConfig.selectors.originalPrice.forEach(sel => {
                     const t = $(sel).text().trim();
                     if (t) originalPrice = parsePrice(t);
@@ -262,16 +263,19 @@ async function scrapeProduct(url) {
         // STRATEGY 4: FALLBACK (Visual Selection)
         if (!title) title = $('h1').first().text().trim();
         if (!price) {
-            // Try to find any price-looking text in h1's parent or specialized price containers
             const raw = $('body').text().match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/);
             if (raw) price = parsePrice(raw[0]);
         }
+
+        // --- FINAL PRICE SANITY CHECK ---
+        // Ensure original price is >= current price, else nullify it to avoid confusing the user
+        if (originalPrice < price) originalPrice = 0;
 
         // Clean Results
         const result = {
             title: title || "Ürün Başlığı Bulunamadı",
             currentPrice: price || 0,
-            originalPrice: originalPrice || price || 0,
+            originalPrice: originalPrice || price, // REAL DATA OR FALLBACK
             imageUrl: imageUrl || "",
             source: source,
             url: url,
