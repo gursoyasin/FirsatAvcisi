@@ -19,6 +19,7 @@ const userRoutes = require('./routes/user'); // Newly Added
 const statsRoutes = require('./routes/stats');
 const scraperService = require('./services/scraper');
 const trackerService = require('./services/tracker');
+const healthRoutes = require('./routes/health');
 
 const app = express();
 app.set('trust proxy', true); // More robust for Render/Cloudflare
@@ -52,8 +53,9 @@ app.use('/api/collections', collectionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/user', userRoutes); // Mount the user route
 app.use('/api/stats', statsRoutes);
+app.use('/api/health', healthRoutes);
 
-// Health Check
+// Health Check (Root)
 app.get('/', (req, res) => {
     res.send('Fırsat Avcısı Backend Ultra ++ is running 🚀');
 });

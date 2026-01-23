@@ -51,16 +51,34 @@ class BrowserService {
             console.log(`Using Proxy: ${proxy}`);
         }
 
-        console.log("🚀 Launching Browser...");
-        console.log("Binary Path:", puppeteer.executablePath());
+        let execPath = process.env.CHROME_PATH || puppeteer.executablePath();
 
-        this.browser = await puppeteer.launch({
-            headless: 'new',
-            args: args,
-            executablePath: puppeteer.executablePath(),
-            ignoreHTTPSErrors: true,
-            protocolTimeout: 120000 // 2 minutes to prevent Network.enable timeout
-        });
+        console.log("🚀 Launching Browser...");
+        console.log("Binary Path:", execPath);
+
+        if (!execPath) {
+            console.error("❌ CRITICAL: Puppeteer executable path is missing! Attempting to rely on auto-detection or system installs.");
+            // Try to find google-chrome-stable if on Linux/Render
+            if (process.platform === 'linux') {
+                try {
+                    // This is just a fallback guess
+                    execPath = '/usr/bin/google-chrome';
+                } catch (e) { }
+            }
+        }
+
+        try {
+            this.browser = await puppeteer.launch({
+                headless: true,
+                args: args,
+                executablePath: execPath, // If null, Puppeteer tries to look it up itself
+                ignoreHTTPSErrors: true,
+                protocolTimeout: 120000 // 2 minutes to prevent Network.enable timeout
+            });
+        } catch (error) {
+            console.error("❌ Failed to launch browser:", error);
+            throw error;
+        }
 
         return this.browser;
     }

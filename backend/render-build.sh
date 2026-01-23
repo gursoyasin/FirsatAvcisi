@@ -3,12 +3,15 @@
 set -o errexit
 
 # Clean install
-rm -rf node_modules
+# Clean install dependencies
+echo "Installing dependencies..."
 npm install
 
-# Install Chrome for Puppeteer explicitly
+# Install Chrome for Puppeteer explicitly (respecting .puppeteerrc.cjs)
 echo "Installing Chrome for Puppeteer..."
 npx puppeteer browsers install chrome
+echo "Puppeteer Cache Directory should be: $(pwd)/.cache/puppeteer"
+ls -R .cache/puppeteer || echo "Cache directory not found!"
 
 # Sync Database Schema (Create tables/columns if missing)
 echo "Syncing Database Schema..."
