@@ -175,6 +175,14 @@ async function scrapeProduct(url) {
             }
         }
 
+        // 3.5. SPLASH SCREEN / ACCESSIBILITY KILLER
+        try {
+            await page.evaluate(() => {
+                const overlay = document.getElementById('INDblindNotif') || document.getElementById('INDWrap');
+                if (overlay) overlay.remove();
+            });
+        } catch (e) { }
+
         // ROBUST WAIT (Wait for Price or Title)
         try {
             await page.waitForFunction(

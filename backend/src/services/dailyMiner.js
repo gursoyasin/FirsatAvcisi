@@ -160,6 +160,20 @@ async function mineCategory(target) {
             console.log("⚠️ Timeout waiting for specific grid selector (could be skeleton or slow), proceeding...");
         }
 
+        // 3.5. SPLASH SCREEN / ACCESSIBILITY KILLER (The "Zero Found" Fix)
+        try {
+            // Inditex Accessibility Overlay (INDblindNotif)
+            await page.evaluate(() => {
+                const overlay = document.getElementById('INDblindNotif') || document.getElementById('INDWrap');
+                if (overlay) overlay.remove();
+
+                const buttons = Array.from(document.querySelectorAll('button'));
+                const closeBtn = buttons.find(b => b.innerText.includes('Kapat') || b.innerText.includes('Close') || b.innerText.includes('X'));
+                if (closeBtn) closeBtn.click();
+            });
+            await new Promise(r => setTimeout(r, 1000));
+        } catch (e) { }
+
         await autoScroll(page);
 
         // 4. EXTRACTION (In-Browser)

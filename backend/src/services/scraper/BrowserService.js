@@ -1,8 +1,6 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-
-// Add stealth plugin and use it as default
-puppeteer.use(StealthPlugin());
+const puppeteer = require('puppeteer');
+// const StealthPlugin = require('puppeteer-extra-plugin-stealth'); 
+// puppeteer.use(StealthPlugin()); // DISABLED due to Render Crash: "Requesting main frame too early"
 
 class BrowserService {
     constructor() {
