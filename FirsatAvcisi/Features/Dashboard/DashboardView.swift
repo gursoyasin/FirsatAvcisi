@@ -93,7 +93,6 @@ struct DashboardView: View {
                                                         .cornerRadius(4)
                                                         .offset(y: 8)
                                                 }
-                                                }
                                             }
                                             Text("dashboard.month.summary")
                                                 .font(.caption)

@@ -40,9 +40,14 @@ class BrowserService {
             '--disable-gpu',
             '--window-size=1920,1080',
             '--lang=tr-TR', // FORCE TURKISH LOCALE NATIVELY
-            '--disable-blink-features=AutomationControlled', // CRITICAL: Hides "Chrome is being controlled by automated software"
+            '--disable-blink-features=AutomationControlled', // CRITICAL
             '--no-first-run',
-            '--no-default-browser-check'
+            '--no-default-browser-check',
+            '--disable-infobars',
+            '--window-position=0,0',
+            '--ignore-certificate-errors',
+            '--ignore-certificate-errors-spki-list',
+            '--disable-features=IsolateOrigins,site-per-process' // Helps with iframes
         ];
 
         // If we have proxies, rotate them

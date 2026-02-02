@@ -114,8 +114,8 @@ async function mineCategory(target) {
                 originalPrice: ['.old-price-elem', '.price-old', '.price-through']
             },
             'pullandbear': {
-                container: '.product-card, div.grid-product, div[data-id]',
-                price: ['.price-current', '.product-price', '.current-price'],
+                container: '.product-card, div.grid-product, div[data-id], .c-product-card',
+                price: ['.price-current', '.product-price', '.current-price', 'div[class*="price"]'],
                 originalPrice: ['.price-old', '.product-price-old', '.old-price']
             },
             'stradivarius': {
@@ -291,10 +291,10 @@ async function mineCategory(target) {
         await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 90000 });
 
         // 3. Scroll to load lazy items
-        console.log("Waiting 3s for initial DOM...");
+        console.log("Waiting 5s for initial DOM (Extra wait for Mavi/P&B)...");
         try {
             // Inditex/Bershka specific wait for real price or non-skeleton product
-            await page.waitForSelector('.product-grid-product, .grid-card, .price-current, .product-price, .product-item:not(.skeleton)', { timeout: 8000 });
+            await page.waitForSelector('.product-grid-product, .grid-card, .price-current, .product-price, .product-item:not(.skeleton)', { timeout: 12000 });
             console.log("✅ Grid content detected.");
         } catch (e) {
             console.log("⚠️ Timeout waiting for specific grid selector (could be skeleton or slow), proceeding...");
