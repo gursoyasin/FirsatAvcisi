@@ -17,57 +17,52 @@ struct SplashScreenView: View {
             }
         } else {
             ZStack {
-                // Premium Background
-                LinearGradient(
-                    colors: [Color.black, Color.purple.opacity(0.3), Color.blue.opacity(0.2)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Professional Minimalist Background
+                Color(uiColor: .systemBackground)
+                    .ignoresSafeArea()
                 
-                VStack {
-                    ZStack {
-                        // Glowing Orbs
-                        Circle()
-                            .fill(Color.purple)
-                            .frame(width: 200, height: 200)
-                            .blur(radius: 60)
-                            .offset(x: -50, y: -50)
-                            
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 200, height: 200)
-                            .blur(radius: 60)
-                            .offset(x: 50, y: 50)
-                            
-                        // Icon / Logo Representation
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.white)
-                            .shadow(color: .purple, radius: 20, x: 0, y: 0)
-                    }
-                    .scaleEffect(size)
-                    .opacity(opacity)
-                    .onAppear {
-                        withAnimation(.easeIn(duration: 1.2)) {
-                            self.size = 0.9
-                            self.opacity = 1.00
-                        }
+                VStack(spacing: 20) {
+                    Spacer()
+                    
+                    // Main Logo Icon
+                    Image(systemName: "bolt.shield.fill") // More "Hunter/Guard" vibe
+                        .font(.system(size: 70))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .scaleEffect(size)
+                        .shadow(color: .blue.opacity(0.3), radius: 10, x: 0, y: 5)
+                    
+                    // App Title
+                    Text("FIRSAT AVCISI")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .tracking(2) // Premium letter spacing
+                        .foregroundColor(.primary)
+                        .opacity(textOpacity)
+                    
+                    Spacer()
+                    
+                    // Subtle Footer
+                    Text("Powered by HunterAI")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.secondary.opacity(0.6))
+                        .padding(.bottom, 40)
+                        .opacity(textOpacity)
+                }
+                .onAppear {
+                    // Staggered Animation
+                    withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
+                        self.size = 1.0
+                        self.opacity = 1.0
                     }
                     
-                    Text("FIRSAT AVCISI")
-                        .font(.title)
-                        .fontWeight(.heavy)
-                        .foregroundColor(.white.opacity(0.80))
-                        .padding(.top, 20)
-                        .opacity(textOpacity)
-                        .onAppear {
-                            withAnimation(.easeIn(duration: 1.0).delay(0.5)) {
-                                self.textOpacity = 1.0
-                            }
-                        }
-                        
-                    // Removed "Ultra ++ Edition" text
+                    withAnimation(.easeIn(duration: 0.8).delay(0.3)) {
+                        self.textOpacity = 1.0
+                    }
                 }
             }
             .onAppear {

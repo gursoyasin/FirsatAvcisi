@@ -170,90 +170,148 @@ struct PremiumFilterChip: View {
 struct ProductGridCard: View {
     let product: Product
     
+    // Gradient Generator based on source
+    private var sourceGradient: LinearGradient {
+        let src = product.source.lowercased()
+        if src.contains("zara") { return LinearGradient(colors: [.black, .gray], startPoint: .topLeading, endPoint: .bottomTrailing) }
+        if src.contains("beymen") { return LinearGradient(colors: [Color(uiColor: .systemOrange), .yellow], startPoint: .topLeading, endPoint: .bottomTrailing) }
+        if src.contains("bershka") { return LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing) }
+        if src.contains("stradivarius") { return LinearGradient(colors: [.pink, .purple], startPoint: .topLeading, endPoint: .bottomTrailing) }
+        return LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Image
+            // MARK: - IMAGE AREA
             ZStack(alignment: .topTrailing) {
                 AsyncImage(url: URL(string: product.imageUrl ?? "")) { image in
                     image.resizable().aspectRatio(contentMode: .fill)
                 } placeholder: {
                     ZStack {
-                        Color.gray.opacity(0.1)
-                        ProgressView().scaleEffect(0.5)
+                        Color(uiColor: .secondarySystemBackground)
+                        Image(systemName: "photo")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 30))
                     }
                 }
-                .frame(height: 170)
+                .frame(height: 200) // Taller image for premium feel
                 .clipped()
-                .background(Color(uiColor: .systemGray6))
                 
-                // Discount Badge (Glass)
+                // Overlay Gredient at bottom for text readability
+                VStack {
+                    Spacer()
+                    LinearGradient(
+                        colors: [.black.opacity(0.6), .clear],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                    .frame(height: 60)
+                }
+                
+                // Discount Badge (Premium Glassmorphism)
                 if let history = product.history, let first = history.first, first.price > product.currentPrice {
                      let discount = Int(((first.price - product.currentPrice) / first.price) * 100)
-                     Text("%\(discount) İNDİRİM")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(8)
-                        .padding(8)
+                     if discount > 0 {
+                         HStack(spacing: 4) {
+                             Image(systemName: "arrow.down")
+                                 .font(.system(size: 10, weight: .bold))
+                             Text("%\(discount)")
+                                 .font(.system(size: 12, weight: .heavy))
+                         }
+                         .foregroundColor(.white)
+                         .padding(.horizontal, 8)
+                         .padding(.vertical, 6)
+                         .background(.ultraThinMaterial)
+                         //.background(Color.red.opacity(0.8)) // Alternative
+                         .clipShape(Capsule())
+                         .overlay(
+                            Capsule().stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                         )
+                         .shadow(radius: 4)
+                         .padding(10)
+                     }
                 }
                 
                 // Stock Badge
                 if let inStock = product.inStock, !inStock {
-                    Text("STOK YOK")
-                        .font(.system(size: 10, weight: .bold))
+                    Text("TÜKENDİ")
+                        .font(.system(size: 10, weight: .heavy))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 6)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.6))
+                        .background(Color.black.opacity(0.7))
                         .cornerRadius(4)
-                        .padding(8)
+                        .padding(10)
                 }
+                
+                // Source Badge (Top Left)
+                Text(product.source.uppercased())
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(1) // Letter spacing
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.black.opacity(0.6))
+                    .cornerRadius(4)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             
-            // Info
-            VStack(alignment: .leading, spacing: 6) {
-                // Store Source
-                Text(product.source.uppercased())
-                    .font(.system(size: 9, weight: .heavy))
-                    .foregroundColor(.secondary)
-                
+            // MARK: - CONTENT AREA
+            VStack(alignment: .leading, spacing: 8) {
+                // Title
                 Text(product.title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .medium))
                     .lineLimit(2)
-                    .frame(height: 34, alignment: .topLeading)
+                    .multilineTextAlignment(.leading)
+                    .frame(height: 40, alignment: .topLeading)
                     .foregroundColor(.primary)
                 
                 HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        // Original Price (if discounted)
+                        if let history = product.history, let first = history.first, first.price > product.currentPrice {
+                            Text("\(first.price, format: .currency(code: "TRY"))")
+                                .font(.system(size: 12))
+                                .strikethrough()
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        // Current Price
                         Text("\(product.currentPrice, format: .currency(code: "TRY"))")
-                            .font(.system(size: 16, weight: .black, design: .rounded))
-                            .foregroundColor(.blue)
-                            .minimumScaleFactor(0.5) // FIX: Aggressive scaling for large prices
-                            .lineLimit(1)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(Color(uiColor: .label))
+                            .minimumScaleFactor(0.8)
                     }
                     
                     Spacer()
                     
-                    // Small Sparkline
+                    // Sparkline (Mini Chart)
                     if let history = product.history, history.count > 1 {
                         Chart(history) {
                             LineMark(x: .value("D", $0.checkedAt), y: .value("P", $0.price))
-                                .foregroundStyle(Color.green.gradient)
+                                .foregroundStyle(
+                                    LinearGradient(colors: [.green, .clear], startPoint: .top, endPoint: .bottom)
+                                )
                                 .interpolationMethod(.catmullRom)
+                                .lineStyle(StrokeStyle(lineWidth: 2))
                         }
                         .chartXAxis(.hidden)
                         .chartYAxis(.hidden)
-                        .frame(width: 40, height: 20)
+                        .frame(width: 40, height: 25)
+                        .foregroundColor(.green)
                     }
                 }
             }
             .padding(12)
         }
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+        .background(Color(uiColor: .systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 5)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color(uiColor: .separator), lineWidth: 0.5)
+        )
     }
 }
 

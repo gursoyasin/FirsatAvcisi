@@ -123,13 +123,19 @@ async function scrapeProduct(url) {
             } catch (e) { console.log("Cookie set error:", e.message); }
         }
 
-        // REQUEST INTERCEPTION (Aggressive Speed Mode)
+        // REQUEST INTERCEPTION (Balanced Mode)
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             const resourceType = req.resourceType();
-            // Block everything not needed for HTML structure (Images, Fonts, CSS, Media)
-            // Exception: Zara sometimes needs CSS for layout, but usually raw HTML is enough for extraction
-            if (['image', 'media', 'font', 'stylesheet', 'other'].includes(resourceType)) {
+            // Block ONLY heavy media. Allow CSS/Scripts/XHR to ensure page renders correctly.
+            // Blocking CSS/Scripts caused some sites (like Mavi/Zara) to fail loading dynamic JSON-LD.
+            if (['image', 'media', 'font', 'stylesheet'].includes(resourceType)) {
+                // We keep stylesheet blocked for speed, BUT if issues persist, we will enable it. 
+                // For now, removing 'other' and 'script' from block list is key.
+                if (domain.includes('zara') || domain.includes('mavi')) {
+                    // Exception: Zara/Mavi might need styles for some JS execution contexts
+                    if (resourceType === 'stylesheet') { req.continue(); return; }
+                }
                 req.abort();
             } else {
                 req.continue();
@@ -256,8 +262,35 @@ async function scrapeProduct(url) {
             }
         }
 
-        // STRATEGY 4: FALLBACK (Visual Selection)
-        if (!title) title = $('h1').first().text().trim();
+        // STRATEGY 4: FALLBACK (Visual Selection & Common Patterns)
+        if (!title) {
+            title = $('h1').first().text().trim();
+            if (!title) title = $('title').text().split('|')[0].trim(); // Last resort: Page Title
+        }
+
+        if (!imageUrl) {
+            // Common product image IDs/Classes
+            const imgSelectors = [
+                '#main-image', '#product-image', '.product-image',
+                'img[data-testid="main-image"]', 'img[property="og:image"]',
+                '.image-gallery img', '.gallery-image'
+            ];
+
+            for (const sel of imgSelectors) {
+                const src = $(sel).attr('src') || $(sel).attr('data-src');
+                if (src && src.startsWith('http')) {
+                    imageUrl = src;
+                    break;
+                }
+            }
+
+            // Last resort: Find largest image? (Risky, skipped for now to avoid logos)
+            if (!imageUrl && domain.includes('zara')) {
+                // Zara specific fallback
+                imageUrl = $('meta[name="twitter:image"]').attr('content');
+            }
+        }
+
         if (!price) {
             const raw = $('body').text().match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/);
             if (raw) price = parsePrice(raw[0]);

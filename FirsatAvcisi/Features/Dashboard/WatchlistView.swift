@@ -136,33 +136,61 @@ struct StatusBar: View {
     let discountedCount: Int
     
     var body: some View {
-        HStack {
-            HStack(spacing: 6) {
-                Image(systemName: "hourglass")
-                    .foregroundColor(.blue)
-                Text("\(count) ürün beklemede")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+        HStack(spacing: 12) {
+            // Waiting Stat
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "hourglass")
+                        .foregroundColor(.blue)
+                        .font(.system(size: 14, weight: .bold))
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(count)")
+                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .foregroundColor(.primary)
+                    Text("Beklemede")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
+            .padding(12)
+            .background(Color(uiColor: .tertiarySystemGroupedBackground))
+            .cornerRadius(16)
             
-            Divider()
-                .frame(height: 20)
-            
-            HStack(spacing: 6) {
-                Image(systemName: "flame.fill")
-                    .foregroundColor(.orange)
-                Text("\(discountedCount) ürün harekette")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+            // Discount Stat
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(Color.orange.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 14, weight: .bold))
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(discountedCount)")
+                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .foregroundColor(.primary)
+                    Text("Harekette")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
+            .padding(12)
+            .background(Color(uiColor: .tertiarySystemGroupedBackground))
+            .cornerRadius(16)
         }
-        .padding(.vertical, 12)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .cornerRadius(12)
         .padding(.horizontal)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
 }
 
@@ -192,31 +220,11 @@ struct SmartWaitingCard: View {
     @ObservedObject var watchlistManager = WatchlistManager.shared
     
     // Derived States
-    var lowestPrice: Double {
-        guard let history = product.history, !history.isEmpty else { return product.currentPrice }
-        return history.map { $0.price }.min() ?? product.currentPrice
-    }
-    
     var waitingDays: Int {
         guard let createdString = product.createdAt,
-              let date = ISO8601DateFormatter().date(from: createdString) else {
-            return 1
-        }
+              let date = ISO8601DateFormatter().date(from: createdString) else { return 1 }
         let components = Calendar.current.dateComponents([.day], from: date, to: Date())
         return max(1, components.day ?? 1)
-    }
-    
-    var emotionalCopy: String {
-        let copies = [
-            "Hâlâ buradayız 💙",
-            "Biraz daha sabır 👀",
-            "Hazır ol… geliyor 🔥",
-            "Birlikte bekliyoruz 🤝",
-            "Fiyatı düşüreceğiz 💪",
-            "Radarımızda 📡"
-        ]
-        let index = abs(product.id.hashValue % copies.count)
-        return copies[index]
     }
     
     var changePercentage: Double {
@@ -226,69 +234,75 @@ struct SmartWaitingCard: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Main Content
+            // MARK: - MAIN CARD CONTENT
             HStack(spacing: 16) {
-                // Product Image
-                AsyncImage(url: URL(string: product.imageUrl ?? "")) { phase in
-                    if let image = phase.image {
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    } else {
-                        Color.gray.opacity(0.1)
+                // Image Section
+                ZStack(alignment: .topLeading) {
+                    AsyncImage(url: URL(string: product.imageUrl ?? "")) { phase in
+                        if let image = phase.image {
+                            image.resizable().aspectRatio(contentMode: .fill)
+                        } else {
+                            Color(uiColor: .secondarySystemBackground)
+                            Image(systemName: "photo").foregroundColor(.gray)
+                        }
                     }
-                }
-                .frame(width: 80, height: 100)
-                .cornerRadius(12)
-                .clipped()
-                .overlay(alignment: .topTrailing) {
-                    Button(action: {
-                        HapticManager.shared.impact(style: .medium)
-                        watchlistManager.toggleWatchlist(product: product)
-                    }) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.red)
+                    .frame(width: 90, height: 110)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    
+                    // Discount Badge (Glass)
+                    if changePercentage > 0 {
+                        Text("%\(Int(changePercentage))")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 4)
+                            .background(.ultraThinMaterial) // Glass Effect
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.5))
+                            .shadow(radius: 2)
                             .padding(6)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
                     }
-                    .padding(4)
                 }
                 
-                // Info
+                // Info Section
                 VStack(alignment: .leading, spacing: 6) {
+                    // Top Row: Brand & Days
                     HStack {
-                        Text(product.brandDisplay)
-                            .font(.caption)
-                            .fontWeight(.bold)
+                        Text(product.brandDisplay.uppercased())
+                            .font(.system(size: 10, weight: .heavy))
+                            .tracking(1)
                             .foregroundColor(.secondary)
                         
                         Spacer()
                         
-                        // Waiting Time Badge (Real Data)
-                        Text("\(waitingDays) gündür")
-                            .font(.caption2)
+                        Label("\(waitingDays) gündür", systemImage: "hourglass")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(4)
+                            .background(Color(uiColor: .tertiarySystemGroupedBackground))
+                            .clipShape(Capsule())
                     }
                     
+                    // Title
                     Text(product.title)
-                        .font(.system(.subheadline, design: .rounded))
-                        .fontWeight(.medium)
+                        .font(.system(size: 14, weight: .semibold))
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
+                        .foregroundColor(.primary)
                     
-                    HStack(alignment: .firstTextBaseline) {
+                    Spacer()
+                    
+                    // Price Row
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text("\(Int(product.currentPrice)) TL")
-                            .font(.system(.title3, design: .rounded))
-                            .fontWeight(.bold)
+                            .font(.system(size: 18, weight: .black, design: .rounded))
                             .foregroundColor(changePercentage > 0 ? .green : .primary)
                         
                         if let original = product.originalPrice, original > product.currentPrice {
                             Text("\(Int(original)) TL")
                                 .strikethrough()
-                                .font(.caption)
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -296,29 +310,7 @@ struct SmartWaitingCard: View {
             }
             .padding(12)
             
-            Divider()
-                .padding(.horizontal)
-            
-            // Footer: Emotional & Pro Upsell
-            HStack {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Text("Fiyat Takibi Aktif") 
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Text(emotionalCopy)
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundColor(.blue)
-            }
-            .padding(12)
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
-            
-            // TARGET PRICE BUTTON (Pro Logic)
+            // MARK: - ACTION BAR (Bottom)
             Button(action: {
                 if SubscriptionManager.shared.isPro {
                     showTargetSheet = true
@@ -327,46 +319,85 @@ struct SmartWaitingCard: View {
                 }
             }) {
                 HStack {
-                    Image(systemName: "bell.badge")
-                        .font(.caption)
-                        .foregroundColor(.white)
-                    
-                    // Show Lock Icon if not Pro
-                    if SubscriptionManager.shared.isPro {
-                        if let target = product.targetPrice, target > 0 {
-                            Text("Hedef: \(Int(target)) TL")
-                                .font(.caption).fontWeight(.bold).foregroundColor(.white)
-                        } else {
-                            Text("Hedef Fiyat Belirle")
-                                .font(.caption).fontWeight(.bold).foregroundColor(.white)
-                        }
+                    // Status Text / Emotional Copy
+                    if let target = product.targetPrice, target > 0 {
+                        Image(systemName: "bell.badge.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white)
+                        Text("Hedef: \(Int(target)) TL")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
                     } else {
+                        Image(systemName: "bell.badge")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white)
                         Text("Hedef Fiyat Belirle")
-                            .font(.caption).fontWeight(.bold).foregroundColor(.white)
-                        Image(systemName: "lock.fill")
-                            .font(.caption2).foregroundColor(.white.opacity(0.8))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
                     }
                     
                     Spacer()
-                    Image(systemName: "chevron.right").font(.caption).foregroundColor(.white.opacity(0.8))
+                    
+                    // Pro Lock or Arrow
+                    if !SubscriptionManager.shared.isPro {
+                        Image(systemName: "lock.fill")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.8))
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+                // Premium Gradient Button
                 .background(
-                    LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                    LinearGradient(
+                        colors: changePercentage > 0 ? [.green, .teal] : [.blue, .purple],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                 )
             }
+            // Bottom Corner Radius Only (for the button to fit card)
+            .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 16, bottomTrailingRadius: 16))
             .sheet(isPresented: $showTargetSheet) {
                 TargetPriceSheet(product: product)
-                    .presentationDetents([.fraction(0.5)]) // Increased height for new design
+                    .presentationDetents([.fraction(0.5)])
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallView()
             }
         }
-        .background(Color(uiColor: .systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 5) // Soft Premium Shadow
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+        )
+    }
+}
+// Helper for Uneven corners (iOS 16+ native, but custom struct for compatibility if needed. Assuming iOS 16+)
+struct UnevenRoundedRectangle: Shape {
+    var topLeadingRadius: CGFloat = 0
+    var topTrailingRadius: CGFloat = 0
+    var bottomLeadingRadius: CGFloat = 0
+    var bottomTrailingRadius: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: [
+                topLeadingRadius > 0 ? .topLeft : [],
+                topTrailingRadius > 0 ? .topRight : [],
+                bottomLeadingRadius > 0 ? .bottomLeft : [],
+                bottomTrailingRadius > 0 ? .bottomRight : []
+            ].reduce(into: UIRectCorner()) { $0.insert($1) },
+            cornerRadii: CGSize(width: max(topLeadingRadius, topTrailingRadius, bottomLeadingRadius, bottomTrailingRadius), height: max(topLeadingRadius, topTrailingRadius, bottomLeadingRadius, bottomTrailingRadius))
+        )
+        return Path(path.cgPath)
     }
 }
 

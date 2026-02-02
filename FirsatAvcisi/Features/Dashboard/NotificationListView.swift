@@ -31,52 +31,76 @@ struct NotificationListView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                if viewModel.alerts.isEmpty && !viewModel.isLoading {
-                    VStack(spacing: 12) {
-                        Image(systemName: "bell.slash")
-                            .font(.largeTitle)
-                            .foregroundColor(.secondary)
-                        Text(LocalizedStringKey("notification.empty"))
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 200)
-                    .listRowBackground(Color.clear)
-                } else {
-                    ForEach(viewModel.alerts) { alert in
-                        HStack(alignment: .top, spacing: 12) {
-                            // Product Image or Icon
-                            if let url = alert.product?.imageUrl, let u = URL(string: url) {
-                                AsyncImage(url: u) { i in i.resizable().aspectRatio(contentMode: .fill) } placeholder: { Color.gray }
-                                    .frame(width: 50, height: 60)
-                                    .cornerRadius(8)
-                                    .clipped()
-                            } else {
-                                Image(systemName: alert.iconName)
-                                    .font(.title2)
-                                    .foregroundColor(alert.color)
-                                    .frame(width: 50, height: 60)
-                                    .background(alert.color.opacity(0.1))
-                                    .cornerRadius(8)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(alert.message)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .lineLimit(3)
-                                
-                                Text(alert.timeAgo)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    if viewModel.alerts.isEmpty && !viewModel.isLoading {
+                        VStack(spacing: 20) {
+                            Image(systemName: "bell.slash.circle.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.secondary.opacity(0.3))
+                                .padding(.top, 60)
+                            Text(LocalizedStringKey("notification.empty"))
+                                .font(.system(size: 16, weight: .medium, design: .rounded))
+                                .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 4)
+                    } else {
+                        ForEach(viewModel.alerts) { alert in
+                            HStack(alignment: .top, spacing: 16) {
+                                // Premium Icon/Image Container
+                                ZStack {
+                                    if let url = alert.product?.imageUrl, let u = URL(string: url) {
+                                        AsyncImage(url: u) { i in
+                                            i.resizable().aspectRatio(contentMode: .fill)
+                                        } placeholder: {
+                                            Color(uiColor: .secondarySystemBackground)
+                                        }
+                                        .frame(width: 56, height: 56)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    } else {
+                                        Circle()
+                                            .fill(alert.color.opacity(0.15))
+                                            .frame(width: 50, height: 50)
+                                        
+                                        Image(systemName: alert.iconName)
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundColor(alert.color)
+                                    }
+                                    
+                                    // New Dot
+                                    if alert.timeAgo.contains("saniye") || alert.timeAgo.contains("dakika") {
+                                        Circle()
+                                            .fill(Color.blue)
+                                            .frame(width: 10, height: 10)
+                                            .offset(x: 26, y: -26)
+                                            .overlay(Circle().stroke(Color(uiColor: .systemBackground), lineWidth: 2).offset(x: 26, y: -26))
+                                    }
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(alert.message)
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .lineLimit(3)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    
+                                    Text(alert.timeAgo)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(16)
+                            .background(Color(uiColor: .secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+                            .padding(.horizontal, 16)
+                        }
                     }
                 }
+                .padding(.top, 10)
             }
-            .listStyle(.insetGrouped)
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle(Text(LocalizedStringKey("notification.title")))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
