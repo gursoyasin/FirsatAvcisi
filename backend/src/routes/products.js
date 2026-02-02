@@ -9,14 +9,33 @@ const { analyzePrice } = require('../services/analysisService');
 // Helper to handle double-encoded strings
 function safeParseJSON(input) {
     if (!input) return [];
-    if (typeof input !== 'string') return input;
+    if (typeof input !== 'string') return Array.isArray(input) ? input : [];
     try {
         let parsed = JSON.parse(input);
         if (typeof parsed === 'string') return safeParseJSON(parsed);
-        return parsed;
+        return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
         return [];
     }
+}
+
+function polishProduct(p) {
+    if (!p) return p;
+    const currentPrice = parseFloat(p.currentPrice) || 0;
+    const originalPrice = parseFloat(p.originalPrice) || currentPrice;
+
+    return {
+        ...p,
+        id: parseInt(p.id),
+        sellers: safeParseJSON(p.sellers),
+        variants: safeParseJSON(p.variants),
+        currentPrice: currentPrice,
+        originalPrice: originalPrice,
+        targetPrice: p.targetPrice ? parseFloat(p.targetPrice) : null,
+        discountPercentage: originalPrice > currentPrice ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : (parseFloat(p.discountPercentage) || 0),
+        inStock: p.inStock ?? true,
+        isSystem: p.isSystem ?? false
+    };
 }
 
 const VIP_EMAILS = [
@@ -65,7 +84,7 @@ router.get('/', async (req, res) => {
         ]);
 
         res.json({
-            products,
+            products: products.map(polishProduct),
             pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
         });
     } catch (error) {
@@ -135,7 +154,7 @@ router.post('/', async (req, res) => {
                     inStock: true
                 }
             });
-            return res.json(updated);
+            return res.json(polishProduct(updated));
         }
 
         const product = await prisma.product.create({
@@ -151,7 +170,7 @@ router.post('/', async (req, res) => {
             }
         });
         console.log("✅ Product Created Successfully ID:", product.id);
-        res.json(product);
+        res.json(polishProduct(product));
     } catch (error) {
         console.error("Save error:", error);
         res.status(500).json({ error: error.message });
@@ -170,7 +189,7 @@ router.get('/trending', async (req, res) => {
         }
 
         const heartFeed = await getHeartFeed(gender);
-        res.json(heartFeed);
+        res.json(heartFeed.map(polishProduct));
     } catch (error) {
         console.error("Trending Error:", error);
         res.status(500).json({ error: "Failed to fetch trending" });
@@ -222,10 +241,7 @@ router.get('/inditex/feed', async (req, res) => {
             });
         }
 
-        const polished = products.slice(0, 50).map(p => ({
-            ...p,
-            discountPercentage: p.originalPrice > p.currentPrice ? Math.round(((p.originalPrice - p.currentPrice) / p.originalPrice) * 100) : 0
-        }));
+        const polished = products.slice(0, 50).map(polishProduct);
 
         res.json(polished);
     } catch (error) {
@@ -343,7 +359,7 @@ router.get('/:id', async (req, res) => {
             include: { history: true }
         });
         if (!product) return res.status(404).json({ error: "Not found" });
-        res.json(product);
+        res.json(polishProduct(product));
     } catch (e) { res.status(500).json({ error: "Failed" }); }
 });
 

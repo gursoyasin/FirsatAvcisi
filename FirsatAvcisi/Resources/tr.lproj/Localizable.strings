@@ -1,0 +1,57 @@
+/* 
+  Localizable.strings
+  FirsatAvcisi
+
+  Created by Antigravity on 01/02/2026.
+*/
+
+// MARK: - Dashboard
+"dashboard.title" = "Fırsat Avcısı";
+"dashboard.filter.all" = "Tümü";
+"dashboard.filter.discounted" = "İndirimde";
+"dashboard.filter.stock" = "Stokta";
+"dashboard.search.placeholder" = "Marka veya ürün ara...";
+"dashboard.empty.title" = "Ürün Bulunamadı";
+"dashboard.empty.message" = "Kriterlerinize uygun ürün yok.";
+"dashboard.loading" = "Fırsatlar Yükleniyor...";
+"dashboard.error.connection" = "İnternet bağlantısı yok, önbellek gösteriliyor.";
+"dashboard.error.load" = "Ürünler yüklenemedi: %@";
+
+// MARK: - Filter
+"filter.sort.newest" = "En Yeniler";
+"filter.sort.priceLowHigh" = "Artan Fiyat";
+"filter.sort.priceHighLow" = "Azalan Fiyat";
+"filter.sort.biggestDiscount" = "En Büyük İndirim";
+
+// MARK: - Common
+"common.error" = "Hata";
+"common.success" = "Başarılı";
+"common.delete" = "Sil";
+"common.cancel" = "İptal";
+"common.save" = "Kaydet";
+"common.ok" = "Tamam";
+"common.close" = "Kapat";
+
+// MARK: - Notifications
+"notification.title" = "Bildirimler";
+"notification.empty" = "Henüz bildirim yok.";
+
+// MARK: - Settings
+// MARK: - Dashboard New
+"dashboard.search.button" = "Ara";
+"dashboard.month.summary" = "Ayın Özeti";
+"dashboard.new" = "YENİ";
+"dashboard.exploring" = "Web Taranıyor...";
+"dashboard.discovered" = "Keşfedilen Fırsatlar";
+"dashboard.scanning" = "Tüm mağazalar taranıyor";
+"dashboard.noresults.title" = "Hiçbir Sonuç Bulunamadı";
+"dashboard.noresults.desc" = "Aradığın kriterlerde ürün bulamadık.";
+"dashboard.watchlist.empty.title" = "Takip Listesi Boş";
+"dashboard.watchlist.empty.message" = "İstediğin ürünü ekleyerek indirimleri anında yakala.";
+"dashboard.watchlist.empty.button" = "İlk Ürünü Ekle";
+"dashboard.tracking.title" = "Takip Ettiklerin";
+
+// MARK: - Stats
+"dashboard.stats.saved" = "Toplam Kazanç";
+"dashboard.stats.sale" = "İndirimde";
+"dashboard.stats.tracking" = "Takip Edilen";

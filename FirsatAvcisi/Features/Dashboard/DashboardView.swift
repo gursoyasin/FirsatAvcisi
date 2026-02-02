@@ -6,6 +6,7 @@ struct DashboardView: View {
     @State private var showingAddProduct = false
     @State private var showingSettings = false
     @State private var showingStories = false
+    @State private var showingNotifications = false
     
     // Grid Layout
     let columns = [
@@ -56,13 +57,15 @@ struct DashboardView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         // 1. Dynamic Header
-                        HunterHeaderView()
+                        HunterHeaderView(showingNotifications: $showingNotifications)
                         
                         // 1.5 STORIES (Ultra Feature)
-                        if !viewModel.products.filter({ ($0.discountPercentage ?? 0) > 20 }).isEmpty {
+                        // 1.5 MONTHLY WRAP (Delici Feature)
+                        // Trigger only if there are savings or activity
+                        if calculateTotalSavings() > 0 {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 15) {
-                                    // Main Story Circle
+                                    // Wrap Entry Circle
                                     Button(action: {
                                         showingStories = true
                                     }) {
@@ -70,17 +73,31 @@ struct DashboardView: View {
                                             ZStack {
                                                 Circle()
                                                     .stroke(
-                                                        LinearGradient(colors: [.orange, .purple], startPoint: .bottomLeading, endPoint: .topTrailing),
+                                                        LinearGradient(colors: [.green, .mint], startPoint: .bottomLeading, endPoint: .topTrailing),
                                                         lineWidth: 3
                                                     )
                                                     .frame(width: 68, height: 68)
                                                 
-                                                Image(systemName: "flame.fill")
+                                                Image(systemName: "star.fill")
                                                     .font(.title)
-                                                    .foregroundColor(.orange)
+                                                    .foregroundColor(.green)
+                                                
+                                                // New Badge
+                                                VStack {
+                                                    Spacer()
+                                                    Text(LocalizedStringKey("dashboard.new"))
+                                                        .font(.system(size: 8, weight: .bold))
+                                                        .padding(4)
+                                                        .background(Color.red)
+                                                        .foregroundColor(.white)
+                                                        .cornerRadius(4)
+                                                        .offset(y: 8)
+                                                }
+                                                }
                                             }
-                                            Text("Süper\nFırsatlar")
+                                            Text("dashboard.month.summary")
                                                 .font(.caption)
+                                                .bold()
                                                 .multilineTextAlignment(.center)
                                                 .foregroundColor(.primary)
                                         }
@@ -102,7 +119,7 @@ struct DashboardView: View {
                         HStack {
                             Image(systemName: "magnifyingglass")
                                 .foregroundColor(.secondary)
-                            TextField("Listende ara...", text: $viewModel.searchText)
+                            TextField("dashboard.search.placeholder", text: $viewModel.searchText)
                                 .textFieldStyle(.plain)
                             
                             if !viewModel.searchText.isEmpty {
@@ -115,7 +132,7 @@ struct DashboardView: View {
                                         ProgressView()
                                             .scaleEffect(0.8)
                                     } else {
-                                        Text("Ara")
+                                        Text(LocalizedStringKey("dashboard.search.button"))
                                             .font(.caption)
                                             .bold()
                                             .padding(.horizontal, 10)
@@ -138,7 +155,7 @@ struct DashboardView: View {
                             HStack(spacing: 12) {
                                 ForEach(DashboardViewModel.FilterType.allCases, id: \.self) { filter in
                                     PremiumFilterChip(
-                                        title: filter.rawValue,
+                                        title: filter.localizedName,
                                         icon: filterIcon(for: filter),
                                         isSelected: viewModel.selectedFilter == filter
                                     ) {
@@ -161,9 +178,9 @@ struct DashboardView: View {
                                             .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom))
                                         
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text(viewModel.isGlobalSearching ? "Web Taranıyor..." : "Keşfedilen Fırsatlar")
+                                            Text(viewModel.isGlobalSearching ? "dashboard.exploring" : "dashboard.discovered")
                                                 .font(.headline)
-                                            Text("Tüm mağazalar taranıyor")
+                                            Text("dashboard.scanning")
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -195,9 +212,9 @@ struct DashboardView: View {
                                     Image(systemName: "exclamationmark.magnifyingglass")
                                         .font(.system(size: 50))
                                         .foregroundColor(.gray.opacity(0.3))
-                                    Text("Hiçbir Sonuç Bulunamadı")
+                                    Text("dashboard.noresults.title")
                                         .font(.headline)
-                                    Text("Aradığın kriterlerde ürün bulamadık.")
+                                    Text("dashboard.noresults.desc")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
@@ -220,16 +237,16 @@ struct DashboardView: View {
                             } else if viewModel.filteredProducts.isEmpty && viewModel.globalSearchResults.isEmpty && !viewModel.isGlobalSearching {
                                 EmptyStateView(
                                     icon: "bag.badge.plus",
-                                    title: "Takip Listesi Boş",
-                                    message: "İstediğin ürünü ekleyerek indirimleri anında yakala.",
-                                    buttonTitle: "İlk Ürünü Ekle",
+                                    title: NSLocalizedString("dashboard.watchlist.empty.title", comment: ""),
+                                    message: NSLocalizedString("dashboard.watchlist.empty.message", comment: ""),
+                                    buttonTitle: NSLocalizedString("dashboard.watchlist.empty.button", comment: ""),
                                     action: { showingAddProduct = true }
                                 )
                                 .padding(.top, 40)
                             } else if !viewModel.filteredProducts.isEmpty {
                                 VStack(alignment: .leading, spacing: 12) {
                                     if !viewModel.globalSearchResults.isEmpty || viewModel.isGlobalSearching {
-                                        Text("Takip Ettiklerin")
+                                        Text("dashboard.tracking.title")
                                             .font(.headline)
                                             .padding(.horizontal)
                                     }
@@ -308,9 +325,14 @@ struct DashboardView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
+            .sheet(isPresented: $showingNotifications) {
+                NotificationListView()
+            }
             .fullScreenCover(isPresented: $showingStories) {
-                StoryView(
-                    products: viewModel.products.filter({ ($0.discountPercentage ?? 0) > 20 }),
+                MonthlyWrapView(
+                    totalSavings: calculateTotalSavings(),
+                    bestCatch: viewModel.products.max(by: { ($0.discountPercentage ?? 0) < ($1.discountPercentage ?? 0) }),
+                    hunterScore: min(100, Int(calculateTotalSavings() / 50) + (viewModel.products.count * 5)), // Mock Score Logic
                     isPresented: $showingStories
                 )
             }

@@ -9,6 +9,7 @@ struct Product: Identifiable, Codable {
     let source: String
     let url: String
     let inStock: Bool?
+    let createdAt: String?
     
     var targetPrice: Double?
     let history: [PriceHistory]?
@@ -25,6 +26,22 @@ struct Product: Identifiable, Codable {
     // Aggregator Fields
     let sellers: [Seller]?
     let variants: [ProductVariant]?
+    
+    // Delici Features Data
+    let smartAnalysis: SmartAnalysis?
+}
+
+struct SmartAnalysis: Codable {
+    let realDiscountStatus: DiscountStatus
+    let lowestPriceIn30Days: Double?
+    let timePrediction: String? // "Genelde Cuma günleri düşer"
+    let socialWatchCount: Int? // "312 kişi"
+}
+
+enum DiscountStatus: String, Codable {
+    case real = "REAL" // Great deal
+    case inflated = "INFLATED" // Fake discount
+    case standard = "STANDARD" // Normal price
 }
 
 struct Seller: Identifiable, Codable {

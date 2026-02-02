@@ -5,7 +5,6 @@ import Combine
 class DashboardViewModel: ObservableObject {
     @Published var products: [Product] = []
     @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
     @Published var selectedFilter: FilterType = .all
     @Published var selectedSort: SortType = .newest
     @Published var searchText: String = ""
@@ -19,14 +18,28 @@ class DashboardViewModel: ObservableObject {
     @Published var isGlobalSearching: Bool = false
     
     private let apiService = APIService.shared
+    private let dataManager = DataManager.shared
+    private let alertManager = AlertManager.shared
+    private let analytics = AnalyticsManager.shared
     
     enum FilterType: String, CaseIterable {
-        case all = "Tümü"
-        case discounted = "İndirimde"
-        case stock = "Stokta"
-        case zara = "Zara"
-        case trendyol = "Trendyol"
-        case amazon = "Amazon"
+        case all = "all"
+        case discounted = "discounted"
+        case stock = "stock"
+        case zara = "zara"
+        case trendyol = "trendyol"
+        case amazon = "amazon"
+        
+        var localizedName: String {
+            switch self {
+            case .all: return NSLocalizedString("dashboard.filter.all", comment: "All products")
+            case .discounted: return NSLocalizedString("dashboard.filter.discounted", comment: "Discounted products")
+            case .stock: return NSLocalizedString("dashboard.filter.stock", comment: "In stock")
+            case .zara: return "Zara" // Brand names don't need translation usually
+            case .trendyol: return "Trendyol"
+            case .amazon: return "Amazon"
+            }
+        }
     }
 
     enum SortType {
@@ -46,7 +59,6 @@ class DashboardViewModel: ObservableObject {
         guard !isLoading && canLoadMore else { return }
         
         isLoading = true
-        errorMessage = nil
         
         do {
             let response = try await apiService.fetchProducts(page: currentPage, limit: limit)
@@ -56,10 +68,23 @@ class DashboardViewModel: ObservableObject {
                 self.products.append(contentsOf: response.products)
             }
             
+            // Cache products locally
+            dataManager.saveProducts(response.products)
+            
             self.currentPage += 1
             self.canLoadMore = response.pagination.page < response.pagination.totalPages
         } catch {
-            self.errorMessage = "Ürünler yüklenemedi: \(error.localizedDescription)"
+            // Load from cache if API fails
+            if isRefresh {
+                let cachedProducts = dataManager.fetchAllProducts()
+                if !cachedProducts.isEmpty {
+                    self.products = cachedProducts
+                    alertManager.toast(NSLocalizedString("dashboard.error.connection", comment: ""), type: .warning)
+                } else {
+                    let msg = String(format: NSLocalizedString("dashboard.error.load", comment: ""), error.localizedDescription)
+                    alertManager.toast(msg, type: .error)
+                }
+            }
         }
         isLoading = false
     }
@@ -123,11 +148,20 @@ class DashboardViewModel: ObservableObject {
             // Plan said Batch Delete endpoint, so I'll add it to APIService later
             // For now, assume it exists
             try await apiService.batchDeleteProducts(ids: Array(selectedProductIDs))
+            
+            // Analytics: Ürün silme
+            analytics.logProductRemoved(
+                source: "batch",
+                daysTracked: 0
+            )
+            
             await fetchProducts()
             isEditMode = false
             selectedProductIDs.removeAll()
+            selectedProductIDs.removeAll()
         } catch {
-            self.errorMessage = "Silme işlemi başarısız: \(error.localizedDescription)"
+            let msg = NSLocalizedString("common.error", comment: "") + ": " + error.localizedDescription
+            alertManager.toast(msg, type: .error)
         }
         isLoading = false
     }
@@ -154,7 +188,7 @@ class DashboardViewModel: ObservableObject {
             selectedProductIDs.removeAll()
             await fetchProducts()
         } catch {
-            self.errorMessage = "Koleksiyona eklenemedi"
+            alertManager.toast("Koleksiyona eklenemedi", type: .error)
         }
     }
     func selectFilter(_ filter: FilterType) {
@@ -168,14 +202,20 @@ class DashboardViewModel: ObservableObject {
     func performGlobalSearch() async {
         guard !searchText.isEmpty else { return }
         isGlobalSearching = true
-        errorMessage = nil
         do {
             self.globalSearchResults = try await apiService.globalSearch(query: searchText)
+            
+            // Analytics: Arama
+            analytics.logSearch(
+                query: searchText,
+                resultsCount: globalSearchResults.count
+            )
+            
             // Haptic Feedback when search finishes
             let generator = UINotificationFeedbackGenerator()
             generator.notificationOccurred(self.globalSearchResults.isEmpty ? .warning : .success)
         } catch {
-            self.errorMessage = "Mağazalarda arama yapılamadı: \(error.localizedDescription)"
+            alertManager.toast("Mağazalarda arama yapılamadı: \(error.localizedDescription)", type: .error)
         }
         isGlobalSearching = false
     }

@@ -43,3 +43,47 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = logger;
+
+// Discord Webhook Integration
+// Usage: logger.notifyDiscord("🚨 ALERT: Scraper Failed!")
+logger.notifyDiscord = async (message) => {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) return;
+
+    try {
+        // Use dynamic import for fetch if needed or simple fetch if Node 18+
+        // Assuming Node 18+ which has global fetch, otherwise use axios if available or https
+        // Using standard https for zero-dependency
+        const https = require('https');
+        const url = new URL(webhookUrl);
+
+        const data = JSON.stringify({
+            content: message,
+            username: "Fırsat Avcısı Bot",
+            avatar_url: "https://i.imgur.com/4M34hi2.png"
+        });
+
+        const options = {
+            hostname: url.hostname,
+            path: url.pathname + url.search,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            // fire and forget
+        });
+
+        req.on('error', (error) => {
+            console.error('Discord Webhook Error:', error);
+        });
+
+        req.write(data);
+        req.end();
+    } catch (error) {
+        console.error('Failed to send Discord notification:', error);
+    }
+};

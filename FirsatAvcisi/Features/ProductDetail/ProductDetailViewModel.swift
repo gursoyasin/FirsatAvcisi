@@ -15,6 +15,7 @@ class ProductDetailViewModel: ObservableObject {
 
     init(product: Product) {
         self.product = product
+        
         // Başlangıçta mevcut fiyatı tek bir nokta olarak ekle
         self.priceHistory = [
             PricePoint(date: Date(), price: product.currentPrice)

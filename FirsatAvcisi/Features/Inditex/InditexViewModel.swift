@@ -4,6 +4,8 @@ import Combine
 @MainActor
 class InditexViewModel: ObservableObject {
     @Published var products: [Product] = []
+    @Published var trendingProducts: [Product] = []
+    @Published var personalizedProducts: [Product] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
@@ -14,8 +16,40 @@ class InditexViewModel: ObservableObject {
     @Published var selectedBrand: String = "Hepsi"
     let brands = ["Hepsi", "Zara", "Bershka", "Pull&Bear", "Stradivarius", "Oysho", "Massimo Dutti"]
     
+    // Intent-based Categories
     @Published var selectedCategory: String = "Tümü"
-    let categories = ["Tümü", "Elbise", "Tişört", "Ceket", "Pantolon", "Dış Giyim", "Kazak", "Gömlek", "Ayakkabı", "Çanta", "Sweatshirt", "Etek/Şort", "Şapka", "Moda"]
+    let categoryMap: [String: String] = [
+        "Tümü": "Tümü",
+        "Günlük": "Elbise",
+        "Akşamlık": "Moda",
+        "Mevsim Geçişi": "Ceket",
+        "Ofis Stili": "Gömlek",
+        "Rahat Takıl": "Sweatshirt",
+        "Tamamlayıcı": "Çanta",
+        "Stil": "Ayakkabı"
+    ]
+    
+    var categories: [String] {
+        ["Tümü", "Günlük", "Akşamlık", "Mevsim Geçişi", "Ofis Stili", "Rahat Takıl", "Tamamlayıcı", "Stil"]
+    }
+    
+    // Brand Insights (Smart Copy)
+    var brandInsight: String {
+        switch selectedBrand {
+        case "Zara":
+            return "Zara’da bugün indirim sessiz ama hareket var 👀"
+        case "Bershka":
+            return "Bershka genelde Cuma akşamları düşer 🔥"
+        case "Pull&Bear":
+            return "Street parçalar indirime yaklaşıyor, pusuda kal"
+        case "Stradivarius":
+            return "Basic parçalarda stoklar yenilenmiş görünüyor ✨"
+        case "Massimo Dutti":
+            return "Premium koleksiyonda beklenen düşüş kapıda 💎"
+        default:
+            return "Bugün senin için seçtiğimiz yeni fırsatlar burada"
+        }
+    }
     
     enum SortOption: String, CaseIterable, Identifiable {
         case smart = "Önerilen"
@@ -56,17 +90,12 @@ class InditexViewModel: ObservableObject {
         // Sorting
         switch selectedSort {
         case .smart:
-            // Smart sort: High discount + recent
-            // For simplicity, let's prioritize discount rate for now
             result.sort { p1, p2 in
                 let d1 = calculateDiscount(p1)
                 let d2 = calculateDiscount(p2)
                 return d1 > d2
             }
         case .newest:
-            // Assuming the list from backend is already somewhat ordered or we don't have a date field easily
-            // We'll keep original order or shuffle if needed, but usually backend sends newest.
-            // Let's rely on original order for 'newest' effectively
             break 
         case .priceLowHigh:
             result.sort { $0.currentPrice < $1.currentPrice }
@@ -83,27 +112,44 @@ class InditexViewModel: ObservableObject {
         return result
     }
     
-    var topDeals: [Product] {
-        // Return top 5 products with significantly high discount (e.g. > 30%)
-        let allSortedByDiscount = products.sorted { calculateDiscount($0) > calculateDiscount($1) }
-        return Array(allSortedByDiscount.prefix(8))
-    }
-    
     private func calculateDiscount(_ p: Product) -> Double {
         guard let original = p.originalPrice, original > p.currentPrice else { return 0 }
         return (original - p.currentPrice) / original
+    }
+    
+    func fetchTrending() async {
+        do {
+            // Use backend Trending endpoint for real analysis
+            let trending = try await APIService.shared.fetchTrendingProducts()
+            self.trendingProducts = Array(trending.prefix(6))
+        } catch {
+            print("Failed to fetch trending: \(error)")
+        }
+    }
+    
+    func fetchPersonalized() async {
+        do {
+            // Fetch personalized from favorite brands or Zara
+            let favs = UserPreferences.shared.interestedBrands
+            let brand = favs.isEmpty ? "Zara" : favs.randomElement()
+            let recommended = try await APIService.shared.fetchInditexFeed(brand: brand, category: nil)
+            self.personalizedProducts = Array(recommended.shuffled().prefix(6))
+        } catch {
+            print("Failed to fetch personalized: \(error)")
+        }
     }
     
     func loadFeed() async {
         isLoading = true
         errorMessage = nil
         
+        async let mainFeed = APIService.shared.fetchInditexFeed(brand: selectedBrand == "Hepsi" ? nil : selectedBrand, 
+                                                               category: categoryMap[selectedCategory] == "Tümü" ? nil : categoryMap[selectedCategory])
+        async let _ = fetchTrending()
+        async let _ = fetchPersonalized()
+        
         do {
-            let brand = selectedBrand == "Hepsi" ? nil : selectedBrand
-            let category = selectedCategory == "Tümü" ? nil : selectedCategory
-            
-            let fetched = try await APIService.shared.fetchInditexFeed(brand: brand, category: category)
-            self.products = fetched
+            self.products = try await mainFeed
         } catch {
             self.errorMessage = "İndirimler yüklenemedi: \(error.localizedDescription)"
         }
@@ -121,7 +167,6 @@ class InditexViewModel: ObservableObject {
         Task { await loadFeed() }
     }
     
-    // Admin Trigger for Demo
     func triggerMiner() {
         Task {
              try? await APIService.shared.triggerInditexMiner()

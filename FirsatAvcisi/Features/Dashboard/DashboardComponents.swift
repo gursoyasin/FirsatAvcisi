@@ -4,6 +4,7 @@ import Charts
 // MARK: - Hunter Header View (Dynamic Greeting)
 struct HunterHeaderView: View {
     @State private var timeGreeting: String = ""
+    @Binding var showingNotifications: Bool
     
     var body: some View {
         HStack {
@@ -12,7 +13,7 @@ struct HunterHeaderView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
                 
-                Text("Fırsat Avcısı 🏹")
+                Text(LocalizedStringKey("dashboard.title")) // Using Localized Key
                     .font(.system(size: 28, weight: .black, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
@@ -25,8 +26,8 @@ struct HunterHeaderView: View {
             
             Spacer()
             
-            // Profile / Notification Button Placeholder
-            Button(action: {}) {
+            // Profile / Notification Button
+            Button(action: { showingNotifications = true }) {
                 Image(systemName: "bell.badge.fill")
                     .font(.system(size: 20))
                     .foregroundColor(.primary)

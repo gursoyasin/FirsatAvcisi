@@ -6,6 +6,7 @@ struct SignUpView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var name = ""
+    @State private var selectedGender = "female"
     @State private var showVerificationAlert = false
     
     var body: some View {
@@ -21,7 +22,7 @@ struct SignUpView: View {
                     .padding(.top, 50)
                 
                 // Form
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     TextField("Ad Soyad", text: $name)
                         .padding()
                         .background(Color.white)
@@ -41,6 +42,21 @@ struct SignUpView: View {
                         .background(Color.white)
                         .cornerRadius(12)
                         .shadow(color: .black.opacity(0.05), radius: 5)
+
+                    // Gender Selection
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Cinsiyet Tercihi")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, 4)
+                        
+                        Picker("Cinsiyet", selection: $selectedGender) {
+                            Text("Kadın Ürünleri").tag("female")
+                            Text("Erkek Ürünleri").tag("male")
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .padding(.top, 8)
                     
                     if let error = viewModel.errorMessage {
                         Text(error)
@@ -50,7 +66,7 @@ struct SignUpView: View {
                     
                     Button {
                         Task {
-                            let success = await viewModel.signUp(email: email, password: password)
+                            let success = await viewModel.signUp(email: email, password: password, gender: selectedGender)
                             if success {
                                 showVerificationAlert = true
                             }
@@ -82,7 +98,7 @@ struct SignUpView: View {
                 dismiss() // Return to Login
             }
         } message: {
-            Text("Lütfen \(email) adresine gönderdiğimiz bağlantıya tıklayarak hesabınızı onaylayın.")
+            Text("Lütfen \(email) adresine gönderdiğimiz bağlantıya tıklayarak hesabınızı onaylayın.\n\n(Spam/Gereksiz kutusunu da kontrol etmeyi unutmayın!)")
         }
     }
 }

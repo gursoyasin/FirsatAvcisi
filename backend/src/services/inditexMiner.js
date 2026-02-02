@@ -1,40 +1,31 @@
 const prisma = require('../config/db');
 const { detectGender } = require('./scraper/index');
 const browserService = require('./scraper/BrowserService');
+const logger = require('../utils/logger');
 console.log(`🔍 InditexMiner: browserService type = ${typeof browserService}`);
 
 // URLs for "Special Prices" / "Sale" sections
-const TARGETS = [
-    // BERSHKA (Expanded)
-    { source: "bershka", url: "https://www.bershka.com/tr/kadin/koleksiyon/promosyon-%3D40-c1010193213.html", gender: "woman" },
-    { source: "bershka", url: "https://www.bershka.com/tr/kadin/koleksiyon/d%C4%B1%C5%9F-giyim-c1010193222.html", gender: "woman" }, // Coats
-    { source: "bershka", url: "https://www.bershka.com/tr/kadin/ayakkab%C4%B1-c1010193192.html", gender: "woman" }, // Shoes
-    { source: "bershka", url: "https://www.bershka.com/tr/erkek/koleksiyon/promosyon-%3D40-c1010193138.html", gender: "man" },
+// BERSHKA (Generics to avoid 404s)
+{ source: "bershka", url: "https://www.bershka.com/tr/kadin/giyim/yeni-c1010193218.html", gender: "woman" },
+{ source: "bershka", url: "https://www.bershka.com/tr/erkek/giyim/yeni-c1010193245.html", gender: "man" },
 
-    // STRADIVARIUS (Expanded)
-    { source: "stradivarius", url: "https://www.stradivarius.com/tr/kadin/kategori/ozel-fiyatlar-n1899", gender: "woman" },
-    { source: "stradivarius", url: "https://www.stradivarius.com/tr/kadin/kategori/kaban-n1644", gender: "woman" }, // Coats
-    { source: "stradivarius", url: "https://www.stradivarius.com/tr/kadin/kategori/ayakkabi-n1465", gender: "woman" }, // Shoes
+// STRADIVARIUS
+{ source: "stradivarius", url: "https://www.stradivarius.com/tr/kadin/yeni-koleksiyon/giyim-n1923", gender: "woman" },
+{ source: "stradivarius", url: "https://www.stradivarius.com/tr/kadin/akilli-fiyatlar/giyim-n1899", gender: "woman" },
 
-    // PULL&BEAR (Expanded)
-    { source: "pullandbear", url: "https://www.pullandbear.com/tr/kadin-promosyon-n6548", gender: "woman" },
-    { source: "pullandbear", url: "https://www.pullandbear.com/tr/kadin/indirim/mont-ve-ceketler-c1030230006.html", gender: "woman" }, // Coats Promo
-    { source: "pullandbear", url: "https://www.pullandbear.com/tr/kadin/giyim/ayakkabi-c1030204642.html", gender: "woman" }, // Shoes
-    { source: "pullandbear", url: "https://www.pullandbear.com/tr/erkek-promosyon-n6398", gender: "man" },
+// PULL&BEAR
+{ source: "pullandbear", url: "https://www.pullandbear.com/tr/kadin/giyim/cok-satanlar-n6638", gender: "woman" },
+{ source: "pullandbear", url: "https://www.pullandbear.com/tr/erkek/giyim/cok-satanlar-n6612", gender: "man" },
 
-    // OYSHO (New)
-    { source: "oysho", url: "https://www.oysho.com/tr/kadin/spors/indirim-c1010327508.html", gender: "woman" },
-    { source: "oysho", url: "https://www.oysho.com/tr/kadin/pijama-c1010214502.html", gender: "woman" }, // Backup Category
+// OYSHO
+{ source: "oysho", url: "https://www.oysho.com/tr/kadin/kategori/cok-satanlar-n1576", gender: "woman" },
 
-    // MASSIMO DUTTI (New)
-    { source: "massimodutti", url: "https://www.massimodutti.com/tr/kadin/ozel-fiyatlar-n2642", gender: "woman" },
-    { source: "massimodutti", url: "https://www.massimodutti.com/tr/kadin/giyim/elbise-n1545", gender: "woman" }, // Backup Category
+// MASSIMO DUTTI
+{ source: "massimodutti", url: "https://www.massimodutti.com/tr/kadin/giyim/yeni-gelenler-n1951", gender: "woman" },
 
-    // ZARA (Moved to end due to high latency/bot protection)
-    { source: "zara", url: "https://www.zara.com/tr/tr/s-kadin-l8631.html", gender: "woman" },
-    { source: "zara", url: "https://www.zara.com/tr/tr/kadin-dis-giyim-l1184.html?v1=2418848", gender: "woman" },
-    { source: "zara", url: "https://www.zara.com/tr/tr/kadin-ayakkabi-l1251.html?v1=2418960", gender: "woman" },
-    { source: "zara", url: "https://www.zara.com/tr/tr/erkek-ceket-l629.html?v1=2420803", gender: "man" }
+// ZARA (Moved to end due to high latency/bot protection)
+{ source: "zara", url: "https://www.zara.com/tr/tr/kadin-yeni-gelenler-l1180.html", gender: "woman" },
+{ source: "zara", url: "https://www.zara.com/tr/tr/erkek-yeni-gelenler-l616.html", gender: "man" }
 ];
 
 async function mineInditex(targetFilter = []) {
@@ -51,6 +42,7 @@ async function mineInditex(targetFilter = []) {
             await mineCategory(target);
         } catch (error) {
             console.error(`❌ Failed to mine ${target.source}:`, error.message);
+            logger.notifyDiscord(`⚠️ **Inditex Miner Error**: Failed to mine ${target.source}. Error: ${error.message}`);
         }
     }
 
@@ -64,7 +56,7 @@ async function mineCategory(target) {
         console.log("⚡️⚡️ INDITEX MINER V3.1 (SKELETON FIX) LOADED ⚡️⚡️");
 
         // 1. Headers & Cookies (Copied from scraper/index.js logic)
-        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
 
         // Helper to inject cookies
         const domain = target.url.match(/https?:\/\/(?:www\.)?([^\/]+)/)[1];

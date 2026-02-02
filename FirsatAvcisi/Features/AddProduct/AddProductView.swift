@@ -155,17 +155,6 @@ struct AddProductView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 
-                // Error Message
-                if let error = viewModel.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.red.opacity(0.8))
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                }
-                
                 Spacer()
             }
         }

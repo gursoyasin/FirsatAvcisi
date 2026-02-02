@@ -25,6 +25,21 @@ class AuthViewModel: ObservableObject {
                 if let sharedDefaults = UserDefaults(suiteName: "group.yacN.FirsatAvcisi") {
                     sharedDefaults.set(email, forKey: "userEmail")
                 }
+                
+                // Sync Profile (Gender & Brands) from Backend
+                Task {
+                    if let status = try? await APIService.shared.checkUserStatus() {
+                        await MainActor.run {
+                            if let gender = status.gender {
+                                UserPreferences.shared.gender = gender
+                            }
+                            if let brands = status.brands {
+                                UserPreferences.shared.interestedBrands = Set(brands)
+                                UserDefaults.standard.set(brands, forKey: "interested_brands")
+                            }
+                        }
+                    }
+                }
             } else {
                  // Clear on logout
                  if let sharedDefaults = UserDefaults(suiteName: "group.yacN.FirsatAvcisi") {
@@ -45,6 +60,19 @@ class AuthViewModel: ObservableObject {
         try? await user.reload()
         self.userSession = Auth.auth().currentUser
         self.isAuthenticated = self.userSession?.isEmailVerified ?? false
+        
+        // Final sync after verification/reload
+        if isAuthenticated, let _ = userSession?.email {
+            if let status = try? await APIService.shared.checkUserStatus() {
+                await MainActor.run {
+                    if let gender = status.gender { UserPreferences.shared.gender = gender }
+                    if let brands = status.brands { 
+                        UserPreferences.shared.interestedBrands = Set(brands)
+                        UserDefaults.standard.set(brands, forKey: "interested_brands")
+                    }
+                }
+            }
+        }
     }
     
     func signIn(email: String, password: String) async {
@@ -57,9 +85,13 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func signUp(email: String, password: String) async -> Bool {
+    func signUp(email: String, password: String, gender: String) async -> Bool {
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
+            
+            // Set profile on backend immediately
+            try? await APIService.shared.updateUserProfile(gender: gender)
+            
             try await result.user.sendEmailVerification()
             // Sign out immediately so they can't login without verification
             try Auth.auth().signOut()
@@ -86,6 +118,11 @@ class AuthViewModel: ObservableObject {
         do {
             try Auth.auth().signOut()
             self.userSession = nil
+            
+            // Reset Local Pro Status on Logout
+            // This ensures next user doesn't inherit Previous User's status on this device
+            UserDefaults.standard.set(false, forKey: "isProUser")
+            
         } catch {
             print("Sign out error: \(error.localizedDescription)")
         }

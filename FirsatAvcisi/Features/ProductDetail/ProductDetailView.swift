@@ -15,6 +15,8 @@ struct ProductDetailView: View {
     @State private var selectedDate: Date?
     @State private var selectedPrice: Double?
     
+    @EnvironmentObject var uiState: UIState
+    
     init(product: Product) {
         _viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: product))
     }
@@ -185,42 +187,7 @@ struct ProductDetailView: View {
                         .shadow(color: .black.opacity(0.03), radius: 5)
                         .padding(.horizontal)
                         
-                        // Target Price Section
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Fiyat Alarmı")
-                                .font(.headline)
-                            
-                            HStack {
-                                Image(systemName: "bell.badge.fill")
-                                    .foregroundColor(.orange)
-                                    .font(.title2)
-                                
-                                VStack(alignment: .leading) {
-                                    Text("Hedef Fiyat")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    TextField("0,00 ₺", value: Binding(
-                                        get: { viewModel.product.targetPrice ?? 0 },
-                                        set: { newValue in
-                                            Task { await viewModel.updateTargetPrice(newValue) }
-                                        }
-                                    ), format: .currency(code: "TRY"))
-                                    .keyboardType(.decimalPad)
-                                    .font(.system(size: 18, weight: .bold))
-                                }
-                                Spacer()
-                                Toggle("", isOn: Binding(
-                                    get: { (viewModel.product.targetPrice ?? 0) > 0 },
-                                    set: { _ in } // Toggle is visual only for now
-                                ))
-                                .labelsHidden()
-                            }
-                            .padding()
-                            .background(Color(uiColor: .secondarySystemGroupedBackground))
-                            .cornerRadius(16)
-                            .shadow(color: .black.opacity(0.03), radius: 5)
-                        }
-                        .padding(.horizontal)
+                        // Fiyat Alarmı Section Removed due to user request
                         
                         // Cross-Market Alternatives (Cimri/Akakçe Mode)
                         if !viewModel.alternatives.isEmpty {
@@ -353,9 +320,13 @@ struct ProductDetailView: View {
         }
         .navigationBarHidden(true)
         .task { 
+            uiState.isTabBarHidden = true
             await viewModel.refreshData()
             await viewModel.loadAlternatives()
             await viewModel.fetchAnalysis()
+        }
+        .onDisappear {
+            uiState.isTabBarHidden = false
         }
         .sheet(isPresented: $showCollectionSheet) {
             CollectionSelectionView(productId: viewModel.product.id)

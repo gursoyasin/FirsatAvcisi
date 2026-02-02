@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs'); // Added for path verification
 // const StealthPlugin = require('puppeteer-extra-plugin-stealth'); 
 // puppeteer.use(StealthPlugin()); // DISABLED due to Render Crash: "Requesting main frame too early"
 
@@ -54,18 +55,27 @@ class BrowserService {
 
         let execPath = process.env.CHROME_PATH || puppeteer.executablePath();
 
+        // 🛠️ UNIVERSAL FIX: Check if binary actually exists, fallback to System Chrome if missing
+        if (!fs.existsSync(execPath)) {
+            console.warn(`⚠️ Puppeteer binary missing at: ${execPath}`);
+            if (process.platform === 'darwin') {
+                const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+                if (fs.existsSync(macPath)) {
+                    console.log("🍏 MacOS Detected: Switching to System Chrome...");
+                    execPath = macPath;
+                }
+            } else if (process.platform === 'linux') {
+                // Fallback for Linux/Render if configured path is bad
+                const linuxPath = '/usr/bin/google-chrome';
+                if (fs.existsSync(linuxPath)) execPath = linuxPath;
+            }
+        }
+
         console.log("🚀 Launching Browser...");
         console.log("Binary Path:", execPath);
 
         if (!execPath) {
             console.error("❌ CRITICAL: Puppeteer executable path is missing! Attempting to rely on auto-detection or system installs.");
-            // Try to find google-chrome-stable if on Linux/Render
-            if (process.platform === 'linux') {
-                try {
-                    // This is just a fallback guess
-                    execPath = '/usr/bin/google-chrome';
-                } catch (e) { }
-            }
         }
 
         try {

@@ -3,6 +3,38 @@ const router = express.Router();
 const prisma = require('../config/db');
 const crypto = require('crypto');
 
+// Helper to handle double-encoded strings
+function safeParseJSON(input) {
+    if (!input) return [];
+    if (typeof input !== 'string') return Array.isArray(input) ? input : [];
+    try {
+        let parsed = JSON.parse(input);
+        if (typeof parsed === 'string') return safeParseJSON(parsed);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function polishProduct(p) {
+    if (!p) return p;
+    const currentPrice = parseFloat(p.currentPrice) || 0;
+    const originalPrice = parseFloat(p.originalPrice) || currentPrice;
+
+    return {
+        ...p,
+        id: parseInt(p.id),
+        sellers: safeParseJSON(p.sellers),
+        variants: safeParseJSON(p.variants),
+        currentPrice: currentPrice,
+        originalPrice: originalPrice,
+        targetPrice: p.targetPrice ? parseFloat(p.targetPrice) : null,
+        discountPercentage: originalPrice > currentPrice ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : (parseFloat(p.discountPercentage) || 0),
+        inStock: p.inStock ?? true,
+        isSystem: p.isSystem ?? false
+    };
+}
+
 // Get Collections (with Smart logic)
 router.get('/', async (req, res) => {
     try {
@@ -32,10 +64,15 @@ router.get('/', async (req, res) => {
             const previews = await prisma.product.findMany({ where, take: 4, select: { imageUrl: true, currentPrice: true } });
 
             smart._count.products = count;
-            smart.products = previews;
+            smart.products = previews.map(polishProduct);
         }
 
-        res.json([...smartDefaults, ...collections]);
+        const finalCollections = collections.map(c => ({
+            ...c,
+            products: c.products.map(polishProduct)
+        }));
+
+        res.json([...smartDefaults, ...finalCollections]);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch collections" });
     }
@@ -93,6 +130,78 @@ router.delete('/:id/products/:productId', async (req, res) => {
         });
         res.json({ message: "Removed" });
     } catch (e) { res.status(500).json({ error: "Failed" }); }
+});
+
+// Single Collection Detail
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userEmail = req.headers['x-user-email'] || "anonymous";
+        const idInt = parseInt(id);
+
+        if (idInt < 0) {
+            // Handle System Smart Collections
+            let name = "Akıllı Liste";
+            let icon = "bolt";
+            let where = { userEmail: userEmail };
+
+            if (idInt === -1) {
+                name = "Süper İndirimler";
+                icon = "bolt.fill";
+                where.discountPercentage = { gte: 30 };
+            } else if (idInt === -2) {
+                name = "Stokta Kalanlar";
+                icon = "shippingbox.fill";
+                where.inStock = true;
+            }
+
+            const products = await prisma.product.findMany({
+                where,
+                include: { history: { take: 10, orderBy: { checkedAt: 'desc' } } }
+            });
+
+            return res.json({
+                id: idInt,
+                name: name,
+                icon: icon,
+                type: "SMART",
+                products: products.map(polishProduct),
+                userEmail: "system",
+                isPublic: false
+            });
+        }
+
+        const collection = await prisma.collection.findUnique({
+            where: { id: idInt },
+            include: {
+                products: {
+                    include: { history: { take: 10, orderBy: { checkedAt: 'desc' } } }
+                }
+            }
+        });
+
+        if (!collection || collection.userEmail !== userEmail) return res.status(403).json({ error: "Unauthorized" });
+
+        // Handle User-defined SMART logic
+        if (collection.type === 'SMART' && collection.query) {
+            const queryObj = JSON.parse(collection.query);
+            if (queryObj.minDiscount) {
+                const smartProducts = await prisma.product.findMany({
+                    where: {
+                        userEmail: userEmail,
+                        discountPercentage: { gte: queryObj.minDiscount }
+                    },
+                    include: { history: { take: 10, orderBy: { checkedAt: 'desc' } } }
+                });
+                collection.products = smartProducts;
+            }
+        }
+
+        collection.products = (collection.products || []).map(polishProduct);
+        res.json(collection);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch collection" });
+    }
 });
 
 module.exports = router;

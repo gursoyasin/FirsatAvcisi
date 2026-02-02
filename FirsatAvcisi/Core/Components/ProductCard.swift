@@ -19,14 +19,16 @@ struct ProductCard: View {
     private var imageSection: some View {
         ZStack(alignment: .topTrailing) {
             AsyncImage(url: URL(string: product.imageUrl ?? "")) { image in
-                image.resizable().aspectRatio(contentMode: .fit)
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
             } placeholder: {
                 Color.gray.opacity(0.1)
             }
             .frame(height: 140)
             .frame(maxWidth: .infinity)
-            .background(Color.white)
             .clipped()
+            .background(Color.white)
             
             // Priority: Inditex discount (originalPrice) -> History discount
             if let original = product.originalPrice, original > product.currentPrice {

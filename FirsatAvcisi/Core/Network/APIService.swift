@@ -7,12 +7,24 @@ enum APIError: Error {
     case serverError
     case limitReached
     case unknown
+    case badRequest
 }
 
 class APIService: ObservableObject {
     static let shared = APIService()
-    // Production Server (Render)
-    private let baseURL = "https://firsat-avcisi-backend.onrender.com/api"
+    // Dynamic Base URL
+    private var baseURL: String {
+        // FORCE LIVE URL FOR VERIFICATION
+        return "https://firsat-avcisi-backend.onrender.com/api"
+        
+        /*
+        #if DEBUG
+        return "http://192.168.1.5:3000/api"
+        #else
+        return "https://firsat-avcisi-backend.onrender.com/api"
+        #endif
+        */
+    }
     
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
@@ -82,18 +94,22 @@ class APIService: ObservableObject {
         return try JSONDecoder().decode(AddProductViewModel.ProductPreview.self, from: data)
     }
     
-    func addProduct(preview: AddProductViewModel.ProductPreview) async throws {
+    func addProduct(preview: AddProductViewModel.ProductPreview, targetPrice: Double? = nil) async throws {
         guard let endpoint = URL(string: "\(baseURL)/products") else { throw APIError.badURL }
         
         var request = createRequest(url: endpoint, method: "POST")
         
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "url": preview.url,
             "title": preview.title,
             "price": preview.currentPrice,
             "imageUrl": preview.imageUrl ?? "",
             "source": preview.source
         ]
+        
+        if let target = targetPrice {
+            body["targetPrice"] = target
+        }
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
@@ -288,7 +304,7 @@ class APIService: ObservableObject {
             throw APIError.serverError
         }
     }
-
+    
     func globalSearch(query: String) async throws -> [GlobalSearchProduct] {
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "\(baseURL)/search/global?q=\(encodedQuery)") else {
@@ -299,7 +315,7 @@ class APIService: ObservableObject {
         let (data, _) = try await session.data(for: request)
         return try JSONDecoder().decode([GlobalSearchProduct].self, from: data)
     }
-
+    
     func fetchInditexFeed(brand: String? = nil, category: String? = nil) async throws -> [Product] {
         var urlComponents = URLComponents(string: "\(baseURL)/products/inditex/feed")
         var queryItems: [URLQueryItem] = []
@@ -319,9 +335,9 @@ class APIService: ObservableObject {
         let (data, _) = try await session.data(for: request)
         return try JSONDecoder().decode([Product].self, from: data)
     }
-
+    
     func triggerInditexMiner() async throws {
-        guard let url = URL(string: "\(baseURL)/inditex/mine") else { throw APIError.badURL }
+        guard let url = URL(string: "\(baseURL)/products/inditex/mine") else { throw APIError.badURL }
         var request = createRequest(url: url, method: "POST")
         let (_, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
@@ -371,6 +387,82 @@ class APIService: ObservableObject {
         let request = createRequest(url: url)
         let (data, _) = try await session.data(for: request)
         return try JSONDecoder().decode(AnalysisResult.self, from: data)
+    }
+    func setTargetPrice(productId: Int, price: Double) async throws {
+        // Construct URL: /products/:id/target-price
+        let url = URL(string: "\(baseURL)/products/\(productId)/target")!
+        var request = createRequest(url: url, method: "POST") // or PUT
+        
+        // Body: { targetPrice: 123.45 }
+        let body = ["targetPrice": price]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw APIError.badRequest
+        }
+    }
+    
+    func fetchNotifications() async throws -> [AlertLog] {
+        guard let url = URL(string: "\(baseURL)/notifications") else { throw APIError.badURL }
+        let request = createRequest(url: url)
+        
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw APIError.badRequest
+        }
+        
+        let decoder = JSONDecoder()
+        return try decoder.decode([AlertLog].self, from: data)
+    }
+    
+    // MARK: - Manual VIP Check
+    struct UserStatusResponse: Decodable {
+        let isPremium: Bool
+        let type: String
+        let gender: String?
+        let brands: [String]?
+    }
+    
+    func checkUserStatus() async throws -> UserStatusResponse {
+        guard let url = URL(string: "\(baseURL)/user/status") else { throw APIError.badURL }
+        let request = createRequest(url: url)
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw APIError.serverError
+        }
+        
+        return try JSONDecoder().decode(UserStatusResponse.self, from: data)
+    }
+
+    // MARK: - Stats
+    struct SummaryStats: Decodable {
+        let averageWaitingTime: Int
+    }
+    
+    func fetchDashboardStats() async throws -> SummaryStats {
+        guard let url = URL(string: "\(baseURL)/stats/summary") else { throw APIError.badURL }
+        let request = createRequest(url: url)
+        let (data, _) = try await session.data(for: request)
+        return try JSONDecoder().decode(SummaryStats.self, from: data)
+    }
+
+    func updateUserProfile(gender: String? = nil, brands: [String]? = nil) async throws {
+        guard let url = URL(string: "\(baseURL)/user/profile") else { throw APIError.badURL }
+        var request = createRequest(url: url, method: "POST")
+        
+        var body: [String: Any] = [:]
+        if let gender = gender { body["gender"] = gender }
+        if let brands = brands { body["brands"] = brands }
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw APIError.serverError
+        }
     }
 }
 

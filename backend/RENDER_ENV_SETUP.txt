@@ -1,0 +1,36 @@
+BU DOSYADAKİ BİLGİLERİ RENDER DASHBOARD'A GİRMENİZ GEREKİYOR.
+
+1. Render.com'a giriş yapın.
+2. Dashboard'dan projenize tıklayın (Web Service).
+3. Sol menüden "Environment" sekmesine tıklayın.
+4. "Add Environment Variable" butonuna basarak aşağıdaki 4 maddeyi tek tek ekleyin.
+
+========================================================================
+1. ANAHTAR (Key)   : DATABASE_URL
+   DEĞER (Value)   : postgresql://neondb_owner:npg_7fHxh3nVtceB@ep-rough-fog-agwie4km-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+   Render her yeniden başladığında bu dosyayı SİLER. Verileriniz kaybolur.
+   Bu yüzden Neon.tech veya Render'ın kendi PostgreSQL veritabanını kullanmalısınız.
+   Eğer Neon linkiniz yoksa, bana söyleyin hemen ücretsiz bir tane oluşturalım.
+========================================================================
+
+========================================================================
+2. ANAHTAR (Key)   : NODE_ENV
+   DEĞER (Value)   : production
+   
+   (Bu, uygulamanın "Canlı Mod"da çalışmasını ve daha hızlı olmasını sağlar)
+========================================================================
+
+========================================================================
+3. ANAHTAR (Key)   : PUPPETEER_CACHE_DIR
+   DEĞER (Value)   : /opt/render/project/src/backend/.cache/puppeteer
+   
+   (Bu çok önemli! Chrome tarayıcısının nereye kurulduğunu sisteme söyler. 
+   Bunu yanlış girerseniz "Chrome bulunamadı" hatası alırsınız.)
+========================================================================
+
+========================================================================
+4. ANAHTAR (Key)   : SECRET_KEY
+   DEĞER (Value)   : fa_secure_928374_prod_key_xy782
+   
+   (Bunu istediğiniz gibi sallayabilirsiniz. Güvenlik için gereklidir.)
+========================================================================
