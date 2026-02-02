@@ -85,11 +85,16 @@ async function mineAllBrands() {
                 console.error(`❌ Global Miner Error (${target.source}):`, error.message);
                 if (attempts === 2) {
                     console.error(`💀 Gave up on ${target.source} after 2 attempts.`);
-                    logger.notifyDiscord(`🚨 **CRITICAL**: Failed to mine ${target.source} after 2 attempts. Error: ${error.message}`);
+                    logger.notifyDiscord(`🚨 **CRITICAL**: Failed to mine ${target.source}. Restarting Browser Service...`);
+                    // 🩹 SELF HEALING: Restart browser if we fail significantly
+                    await browserService.restart();
                 }
             }
         }
-        await new Promise(r => setTimeout(r, 4000)); // Polite delay between brands
+        // 🧠 HUMAN BEHAVIOR: Random delay between brands (3s to 8s)
+        const delay = Math.floor(Math.random() * 5000) + 3000;
+        console.log(`💤 Resting for ${delay}ms...`);
+        await new Promise(r => setTimeout(r, delay));
     }
     console.log("🏁 CHRONO MINER: Cycle Completed.");
 }
@@ -291,7 +296,10 @@ async function mineCategory(target) {
         await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 90000 });
 
         // 3. Scroll to load lazy items
-        console.log("Waiting 5s for initial DOM (Extra wait for Mavi/P&B)...");
+        // 3. Scroll to load lazy items
+        const randomWait = Math.floor(Math.random() * 2000) + 4000; // 4s - 6s
+        console.log(`Waiting ${randomWait}ms for initial DOM...`);
+        await new Promise(r => setTimeout(r, randomWait));
         try {
             // Inditex/Bershka specific wait for real price or non-skeleton product
             await page.waitForSelector('.product-grid-product, .grid-card, .price-current, .product-price, .product-item:not(.skeleton)', { timeout: 12000 });

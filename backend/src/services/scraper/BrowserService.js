@@ -115,6 +115,15 @@ class BrowserService {
         const ua = userAgents[Math.floor(Math.random() * userAgents.length)];
         await page.setUserAgent(ua);
 
+        // 🛡️ ELITE STEALTH: Inject scripts to hide Puppeteer traces
+        await page.evaluateOnNewDocument(() => {
+            // Pass the "Test Your Bot" challenges
+            Object.defineProperty(navigator, 'webdriver', { get: () => false });
+            Object.defineProperty(navigator, 'languages', { get: () => ['tr-TR', 'tr', 'en-US', 'en'] });
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] }); // Fake length
+            window.chrome = { runtime: {} }; // Mock chrome object
+        });
+
         return page;
     }
 
