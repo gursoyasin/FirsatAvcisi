@@ -74,15 +74,10 @@ async function scrapeProduct(url) {
     try {
         const domain = new URL(url).hostname.replace('www.', '');
 
-        // ZARA ISOLATION
-        if (domain.includes('zara')) {
-            console.log("☢️ Zara Request Dected: Launching ISOLATED Browser...");
-            const isolated = await browserService.createIsolatedPage();
-            isolatedBrowser = isolated.browser;
-            page = isolated.page;
-        } else {
-            page = await browserService.createPage();
-        }
+        // --- SHARED BROWSER FOR INDITEX & OTHERS ---
+        // We reuse the existing browser service instead of launching a new one each time.
+        // This saves 5-6 seconds of launch time.
+        page = await browserService.createPage();
 
         // BRAND CONFIG
         let brandConfig = null;
@@ -132,8 +127,9 @@ async function scrapeProduct(url) {
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             const resourceType = req.resourceType();
-            // Block everything not needed for HTML structure
-            if (['image', 'media', 'font', 'stylesheet', 'other'].includes(resourceType) && !domain.includes('zara')) {
+            // Block everything not needed for HTML structure (Images, Fonts, CSS, Media)
+            // Exception: Zara sometimes needs CSS for layout, but usually raw HTML is enough for extraction
+            if (['image', 'media', 'font', 'stylesheet', 'other'].includes(resourceType)) {
                 req.abort();
             } else {
                 req.continue();
@@ -298,8 +294,9 @@ async function scrapeProduct(url) {
             error: true
         };
     } finally {
-        if (isolatedBrowser) await isolatedBrowser.close();
-        else if (page) await page.close();
+        // Only close the PAGE, not the browser (Keep-Alive)
+        if (page) await page.close();
+        if (isolatedBrowser) await isolatedBrowser.close(); // Only if we forced isolation
     }
 }
 
