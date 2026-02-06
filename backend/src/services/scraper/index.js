@@ -4,79 +4,57 @@ const cheerio = require('cheerio');
 // ==========================================
 // 🌍 EVRENSEL MARKA HARİTASI (BRAND MAP)
 // ==========================================
-// Tüm markaların CSS seçicileri ve davranış kuralları burada tanımlanır.
-// Yeni marka eklemek için sadece bu listeye ekleme yapmak yeterlidir.
 const BRAND_CONFIGS = {
     // --- INDITEX GRUBU ---
-    'zara.com': { source: 'zara', useCookies: true, selectors: { price: ['.price-current__amount', '.price__amount--current'], originalPrice: ['.price-old__amount', '.price__amount--strikethrough'] } },
-    'bershka.com': { source: 'bershka', useCookies: true, selectors: { price: ['.current-price-elem', '.product-price'], originalPrice: ['.old-price-elem', '.price-old'] } },
-    'pullandbear.com': { source: 'pullandbear', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old', '.old-price'] } },
+    'zara.com': {
+        source: 'zara',
+        useCookies: true,
+        selectors: {
+            price: ['.price-current__amount', '.price__amount--current', '.money-amount__main'],
+            originalPrice: ['.price-old__amount', '.price__amount--strikethrough', '.money-amount__main--strikethrough'],
+            image: ['.media-image__image', '.product-detail-images__image', 'meta[name="twitter:image"]']
+        }
+    },
+    'bershka.com': {
+        source: 'bershka',
+        useCookies: true,
+        selectors: {
+            price: ['.current-price-elem', '.product-price', '.price-current'],
+            originalPrice: ['.old-price-elem', '.price-old'],
+            image: ['.image-item', 'img[class*="product-image"]']
+        }
+    },
+    'pullandbear.com': {
+        source: 'pullandbear',
+        useCookies: true,
+        selectors: {
+            price: ['.price-current', '.product-price'],
+            originalPrice: ['.price-old', '.old-price'],
+            image: ['img[class*="image-item"]']
+        }
+    },
     'stradivarius.com': { source: 'stradivarius', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
     'massimodutti.com': { source: 'massimodutti', useCookies: true, selectors: { price: ['.product-price', '.price-current'], originalPrice: ['.price-old'] } },
     'oysho.com': { source: 'oysho', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
-    'zarahome.com': { source: 'zarahome', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
-    'lefties.com': { source: 'lefties', useCookies: true, selectors: { price: ['.price-current', '.product-price'], originalPrice: ['.price-old'] } },
 
-    // --- GLOBAL MODA ---
+    // --- GLOBAL ---
     'hm.com': { source: 'hm', selectors: { price: ['#product-price .price-value', '.price-value'], originalPrice: ['.price-regular', '.regular-price'] } },
     'mango.com': { source: 'mango', selectors: { price: ["span[data-testid='current-price']", '.text-body-m'], originalPrice: ["span[data-testid='original-price']", '.text-body-s-crossed'] } },
-    'jackjones.com': { source: 'jackjones', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
 
-    // --- TÜRK DEVLERİ & PREMIUM ---
+    // --- TÜRK ---
     'lcwaikiki.com': { source: 'lcwaikiki', selectors: { title: ['h1.product-title'], price: ['.product-price', '.price'], originalPrice: ['.raw-price', '.old-price'] } },
     'defacto.com.tr': { source: 'defacto', selectors: { title: ['h1.product-name'], price: ['.product-price', '.sale-price'], originalPrice: ['.product-card-first-price', '.old-price'] } },
-    'defacto.com': { source: 'defacto' },
-    'koton.com': { source: 'koton', selectors: { title: ['h1.product-name'], price: ['.product-price', '.new-price'], originalPrice: ['.old-price', '.first-price'] } },
-    'colins.com.tr': { source: 'colins', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price', '.basket-price-old'] } },
-    'mavi.com': { source: 'mavi', selectors: { price: ['.price', '.current-price'], originalPrice: ['.old-price', '.price-strikethrough'] } },
-    'loft.com.tr': { source: 'loft', selectors: { price: ['.product-price', '.price', '.current-price'], originalPrice: ['.old-price'] } },
-    'twist.com.tr': { source: 'twist', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'ipekyol.com.tr': { source: 'ipekyol', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-
-    // NETWORK & BOYNER GRUBU
-    'network.com.tr': {
-        source: 'network',
-        selectors: {
-            title: ['h1.product__title', '.product-details__title'],
-            price: ['.product__price--sale', '.product__price'],
-            originalPrice: ['.product__price--old', '.old-price']
-        }
-    },
-    'fabrika.com.tr': { source: 'fabrika', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
     'boyner.com.tr': { source: 'boyner', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'], originalPrice: ['.product-price-old', '.old-price'] } },
-
-    // --- LÜKS & KLASİK ---
     'beymen.com': { source: 'beymen', selectors: { title: ['h1.o-productDetail__title'], price: ['.m-productPrice__salePrice', '.m-productPrice__price'], originalPrice: ['.m-productPrice__retailPrice', '.old-price'] } },
-    'beymenclub.com': { source: 'beymenclub', selectors: { title: ['h1.product-name'], price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'vakko.com': { source: 'vakko', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'damattween.com': { source: 'damattween', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'sarar.com': { source: 'sarar', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'ramsey.com.tr': { source: 'ramsey', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-
-    // --- SPOR ---
-    'nike.com': { source: 'nike', selectors: { title: ['h1#pdp_product_title'], price: ['.product-price', '.is--current-price'], originalPrice: ['.is--striked-out'] } },
-    'adidas.com.tr': { source: 'adidas', selectors: { title: ['h1[data-auto-id="product-title"]'], price: ['.gl-price-item--sale', '.gl-price-item'], originalPrice: ['.gl-price-item--crossed'] } },
-    'puma.com': { source: 'puma', selectors: { price: ['.price', '.product-price'], originalPrice: ['.old-price'] } },
-    'newbalance.com.tr': { source: 'newbalance', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'underarmour.com.tr': { source: 'underarmour', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } },
-    'lesbenjamins.com': { source: 'lesbenjamins', selectors: { price: ['.product-price', '.price'], originalPrice: ['.compare-at-price', '.old-price'] } },
-    'superstep.com.tr': { source: 'superstep', selectors: { price: ['.product-price', '.price'], originalPrice: ['.old-price'] } }
+    'network.com.tr': { source: 'network', selectors: { title: ['h1.product__title'], price: ['.product__price--sale'], originalPrice: ['.product__price--old'] } },
 };
 
 async function scrapeProduct(url) {
     let page = null;
-    let isolatedBrowser = null;
-    let title = "";
-    let price = 0;
-    let originalPrice = 0;
-    let imageUrl = "";
-
     try {
         const domain = new URL(url).hostname.replace('www.', '');
 
-        // --- SHARED BROWSER FOR INDITEX & OTHERS ---
-        // We reuse the existing browser service instead of launching a new one each time.
-        // This saves 5-6 seconds of launch time.
+        // --- SHARED BROWSER ---
         page = await browserService.createPage();
 
         // BRAND CONFIG
@@ -88,117 +66,50 @@ async function scrapeProduct(url) {
             }
         }
         const source = brandConfig ? brandConfig.source : 'unknown';
-        console.log(`🌐 Scraper Hedefi: ${domain} -> Marka: ${source.toUpperCase()}`);
+        console.log(`🌐 Scraper Target: ${domain} -> Brand: ${source.toUpperCase()}`);
 
         if (url.includes('zara.com')) {
-            // FIX: Robust ID Extraction (matches ...-p1234567.html)
             let idMatch = url.match(/-p(\d+)\.html/);
-            if (!idMatch) idMatch = url.match(/v1=(\d+)/); // Query param fallback
-
+            if (!idMatch) idMatch = url.match(/v1=(\d+)/);
             if (idMatch && idMatch[1]) {
                 const cleanId = idMatch[1];
                 url = `https://www.zara.com/tr/tr/product-p${cleanId}.html`;
-                console.log(`🇹🇷 Zara TR Link Normalize Edildi: ${url}`);
+                console.log(`🇹🇷 Zara Link Normalized: ${url}`);
             }
         }
 
-        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
 
-        // GEO-LOCK BYPASS (The Fix for "Select Your Location")
+        // Bypassing Geo/Language popups
         await page.setExtraHTTPHeaders({
-            'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Upgrade-Insecure-Requests': '1',
-            'Referer': 'https://www.google.com/'
+            'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
         });
 
-        // FORCE STORE COOKIES (Inditex Defaults)
         if (domain.includes('zara') || domain.includes('bershka') || domain.includes('pullandbear') || domain.includes('stradivarius')) {
             try {
-                // Set "physical" store info to prevent splash screen
                 await page.setCookie(
-                    { name: 'storeId', value: '11717', domain: `.${domain}` }, // Generic TR Store
+                    { name: 'storeId', value: '11717', domain: `.${domain}` },
                     { name: 'countryCode', value: 'TR', domain: `.${domain}` },
                     { name: 'langCode', value: 'tr', domain: `.${domain}` }
                 );
-            } catch (e) { console.log("Cookie set error:", e.message); }
+            } catch (e) { }
         }
 
-        // REQUEST INTERCEPTION (Balanced Mode)
+        // Optimized Request Interception
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             const resourceType = req.resourceType();
-            // Block ONLY heavy media. Allow CSS/Scripts/XHR to ensure page renders correctly.
-            // Blocking CSS/Scripts caused some sites (like Mavi/Zara) to fail loading dynamic JSON-LD.
-            if (['image', 'media', 'font', 'stylesheet'].includes(resourceType)) {
-                // We keep stylesheet blocked for speed, BUT if issues persist, we will enable it. 
-                // For now, removing 'other' and 'script' from block list is key.
-                if (domain.includes('zara') || domain.includes('mavi')) {
-                    // Exception: Zara/Mavi might need styles for some JS execution contexts
-                    if (resourceType === 'stylesheet') { req.continue(); return; }
-                }
+            if (['image', 'media', 'font'].includes(resourceType)) {
                 req.abort();
             } else {
                 req.continue();
             }
         });
 
-        console.log(`🚀 Gidiliyor: ${url}`);
+        console.log(`🚀 Navigating to: ${url}`);
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
 
-        try {
-            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 }); // 30s is more reasonable for cloud
-        } catch (e) {
-            console.log("⚠️ Navigasyon timeout (Devam ediliyor)...");
-        }
-
-        // DEBUG: Check where we landed
-        let pageTitle = await page.title();
-        console.log(`📍 Landed on Page: "${pageTitle}"`);
-
-        // EMERGENCY: "Select Your Location" Handler
-        if (pageTitle.toLowerCase().includes('location') || pageTitle.toLowerCase().includes('select') || pageTitle.toLowerCase().includes('konum')) {
-            console.log("🚨 'Select Location' screen detected! Attempting auto-fix...");
-            try {
-                // Try multiple strategies to click "Turkey"
-                const trLink = await page.$('a[href*="/tr/tr/"]');
-                const trText = await page.$x("//a[contains(text(), 'Turkey') or contains(text(), 'Türkiye')]");
-
-                if (trLink) {
-                    console.log("🖱️ Clicking TR Link (Href)...");
-                    await Promise.all([page.waitForNavigation({ timeout: 10000 }), trLink.click()]);
-                } else if (trText.length > 0) {
-                    console.log("🖱️ Clicking TR Link (Text)...");
-                    await Promise.all([page.waitForNavigation({ timeout: 10000 }), trText[0].click()]);
-                }
-
-                // Update title after click
-                pageTitle = await page.title();
-                console.log(`📍 New Page Title: "${pageTitle}"`);
-            } catch (e) {
-                console.log("❌ Auto-fix failed:", e.message);
-            }
-        }
-
-        // 3.5. SPLASH SCREEN / ACCESSIBILITY KILLER V2
-        try {
-            await page.evaluate(() => {
-                const overlay = document.getElementById('INDblindNotif') || document.getElementById('INDWrap');
-                if (overlay) overlay.remove();
-
-                const blindBtn = document.querySelector('button[aria-label*="erişilebilirlik"]');
-                if (blindBtn) blindBtn.click();
-
-                // Generic Fixed Overlay Remover
-                const fixed = Array.from(document.querySelectorAll('div')).filter(bs => {
-                    const style = window.getComputedStyle(bs);
-                    return style.position === 'fixed' && style.zIndex > 999;
-                });
-                fixed.forEach(f => {
-                    if (f.innerText.includes('erişilebilirlik')) f.remove();
-                });
-            });
-        } catch (e) { }
-
-        // ROBUST WAIT (Wait for Price or Title)
+        // Wait for essential content
         try {
             await page.waitForFunction(
                 () => document.querySelector('h1') || document.querySelector('[class*="price"]'),
@@ -206,24 +117,33 @@ async function scrapeProduct(url) {
             );
         } catch (e) { }
 
-        // --- DATA EXTRACTION ---
         const content = await page.content();
         const $ = cheerio.load(content);
 
-        // STRATEGY 1: JSON-LD (Gold Standard)
+        let title = "";
+        let price = 0;
+        let originalPrice = 0;
+        let imageUrl = "";
+
+        // ===============================================
+        // 🦁 BEAST MODE EXTRACTION LOGIC
+        // ===============================================
+
+        // 1. JSON-LD (Highest Priority)
         try {
             $("script[type='application/ld+json']").each((i, el) => {
-                let text = $(el).html();
+                const text = $(el).html();
                 if (text) {
                     let data = JSON.parse(text);
                     if (Array.isArray(data)) data = data.find(item => item['@type'] === 'Product');
                     if (data && data.name) {
                         title = data.name;
-                        if (data.image) imageUrl = Array.isArray(data.image) ? data.image[0] : data.image;
+                        if (data.image) {
+                            imageUrl = Array.isArray(data.image) ? data.image[0] : (data.image.url || data.image);
+                        }
                         if (data.offers) {
                             const offer = Array.isArray(data.offers) ? data.offers[0] : data.offers;
                             price = parseFloat(offer.price || offer.lowPrice || 0);
-                            // Some sites put the high/original price in JSON-LD
                             if (offer.highPrice) originalPrice = parseFloat(offer.highPrice);
                         }
                     }
@@ -231,80 +151,76 @@ async function scrapeProduct(url) {
             });
         } catch (e) { }
 
-        // STRATEGY 2: META TAGS
+        // 2. META TAGS (Backup)
         if (!title) title = $("meta[property='og:title']").attr("content");
         if (!imageUrl) imageUrl = $("meta[property='og:image']").attr("content");
-        if (!price) {
-            const p = $("meta[property='product:price:amount']").attr("content") || $("meta[property='og:price:amount']").attr("content");
-            if (p) price = parseFloat(p);
-        }
-        if (!originalPrice) {
-            const op = $("meta[property='product:original_price:amount']").attr("content") || $("meta[name='twitter:data1']").attr("content");
-            if (op && op.match(/\d/)) originalPrice = parsePrice(op);
-        }
 
-        // STRATEGY 3: BRAND SELECTORS (Critical for Network/Beymen)
+        // 3. BRAND SPECIFIC SELECTORS (High Res & Precision)
         if (brandConfig && brandConfig.selectors) {
-            if (!title && brandConfig.selectors.title) {
-                brandConfig.selectors.title.forEach(sel => { if ($(sel).text()) title = $(sel).text().trim() });
-            }
+            // Price Extraction
             if (!price && brandConfig.selectors.price) {
-                brandConfig.selectors.price.forEach(sel => {
-                    const t = $(sel).text().trim();
-                    if (t) price = parsePrice(t);
-                });
+                for (const sel of brandConfig.selectors.price) {
+                    const t = $(sel).first().text().trim();
+                    if (t) {
+                        price = parsePrice(t);
+                        if (price > 0) break;
+                    }
+                }
             }
-            if (brandConfig.selectors.originalPrice) {
-                brandConfig.selectors.originalPrice.forEach(sel => {
-                    const t = $(sel).text().trim();
-                    if (t) originalPrice = parsePrice(t);
-                });
+            // Image Extraction (Look for high-res attributes)
+            if (brandConfig.selectors.image) {
+                for (const sel of brandConfig.selectors.image) {
+                    const el = $(sel).first();
+                    const candidate = el.attr('data-original') || el.attr('data-src') || el.attr('src') || el.attr('content');
+                    if (candidate) {
+                        imageUrl = candidate;
+                        // Try to find high-res version via query param manipulation or heuristics if needed
+                        break;
+                    }
+                }
             }
         }
 
-        // STRATEGY 4: FALLBACK (Visual Selection & Common Patterns)
-        if (!title) {
-            title = $('h1').first().text().trim();
-            if (!title) title = $('title').text().split('|')[0].trim(); // Last resort: Page Title
+        // 4. FALLBACKS
+        if (!title) title = $('h1').first().text().trim();
+        if (!title) title = $('title').text().split('|')[0].trim();
+
+        // Clean Title
+        if (title) {
+            title = title.replace(/\s+/g, ' ').trim();
+            // Remove common junk prefixes/suffixes
+            const junk = [" | ZARA Türkiye", " | Zara Home", " - Bershka", " - Pull&Bear", " - Stradivarius"];
+            junk.forEach(j => title = title.replace(j, ""));
         }
 
         if (!imageUrl) {
-            // Common product image IDs/Classes
-            const imgSelectors = [
-                '#main-image', '#product-image', '.product-image',
-                'img[data-testid="main-image"]', 'img[property="og:image"]',
-                '.image-gallery img', '.gallery-image'
-            ];
-
+            const imgSelectors = ['#main-image', '#product-image', '.product-image', 'img[property="og:image"]'];
             for (const sel of imgSelectors) {
-                const src = $(sel).attr('src') || $(sel).attr('data-src');
+                const src = $(sel).attr('src');
                 if (src && src.startsWith('http')) {
                     imageUrl = src;
                     break;
                 }
             }
-
-            // Last resort: Find largest image? (Risky, skipped for now to avoid logos)
-            if (!imageUrl && domain.includes('zara')) {
-                // Zara specific fallback
-                imageUrl = $('meta[name="twitter:image"]').attr('content');
-            }
         }
 
-        if (!price) {
-            const raw = $('body').text().match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/);
-            if (raw) price = parsePrice(raw[0]);
+        // Final Price Parsing if still zero (Body search)
+        if (price <= 0) {
+            const rawBody = $('body').text().substring(0, 10000); // Limit search scope
+            const match = rawBody.match(/(\d{1,3}(?:[.,]\d{3})*)\s*(?:TL|TRY)/);
+            if (match) price = parsePrice(match[0]);
         }
 
-        // --- FINAL PRICE SANITY CHECK ---
-        // Ensure original price is >= current price, else nullify it to avoid confusing the user
-        if (originalPrice < price) originalPrice = 0;
+        // INTEGRITY CHECK
+        if (originalPrice < price) originalPrice = 0; // Invalid
+        if (price <= 0) {
+            console.warn(`⚠️ Warning: Zero price detected for ${url}`);
+        }
 
-        // Clean Results
         const result = {
             title: title || "Ürün Başlığı Bulunamadı",
             currentPrice: price || 0,
-            originalPrice: originalPrice || price, // REAL DATA OR FALLBACK
+            originalPrice: originalPrice || price,
             imageUrl: imageUrl || "",
             source: source,
             url: url,
@@ -312,12 +228,11 @@ async function scrapeProduct(url) {
             category: detectCategory(title),
             gender: detectGender(url, title)
         };
-        console.log(`✅ Scraper Başarılı: ${JSON.stringify(result)}`);
+        console.log(`✅ Scrape Success: ${result.title} (${result.currentPrice} TL)`);
         return result;
 
     } catch (error) {
-        console.error(`❌ Scrape Hatası (${url}):`, error.message);
-        // CRITICAL: Return SAFE object instead of crashing
+        console.error(`❌ Scrape Error (${url}):`, error.message);
         return {
             title: "Analiz Edilemedi",
             currentPrice: 0,
@@ -327,99 +242,69 @@ async function scrapeProduct(url) {
             error: true
         };
     } finally {
-        // Only close the PAGE, not the browser (Keep-Alive)
         if (page) await page.close();
-        if (isolatedBrowser) await isolatedBrowser.close(); // Only if we forced isolation
     }
 }
 
 function parsePrice(text) {
     if (!text) return 0;
-
-    // Remove non-numeric chars except . and ,
+    // Remove all non-numeric except . and ,
     let clean = text.replace(/[^\d.,]/g, '').trim();
     if (!clean) return 0;
 
-    // Detect format:
-    // 15.000,50 -> TR format (dot is thousand, comma is decimal)
-    // 15,000.50 -> US format (comma is thousand, dot is decimal)
-    // 15.000 -> TR format (thousand)
-
-    const lastDot = clean.lastIndexOf('.');
+    const lastPoint = clean.lastIndexOf('.');
     const lastComma = clean.lastIndexOf(',');
 
-    if (lastDot > -1 && lastComma > -1) {
-        if (lastDot > lastComma) {
-            // US Format or mixed correctly: 1,500.50
-            return parseFloat(clean.replace(/,/g, ''));
-        } else {
-            // TR Format: 1.500,50
-            return parseFloat(clean.replace(/\./g, '').replace(',', '.'));
-        }
+    // TR/EU Standard: 1.200,50
+    if (lastPoint > -1 && lastComma > -1 && lastPoint < lastComma) {
+        clean = clean.replace(/\./g, '').replace(',', '.');
     }
-
-    if (lastComma > -1) {
-        // Only comma: 99,50 or 1,500 (Ambiguous)
-        // Heuristic: If comma is 3 digits from end, might be thousands, but usually in TR it's decimals for small strings
-        const parts = clean.split(',');
-        if (parts[parts.length - 1].length === 3 && clean.length > 4) {
-            // Likely thousand: 1,000
-            return parseFloat(clean.replace(/,/g, ''));
-        }
-        // Likely decimal: 99,50
-        return parseFloat(clean.replace(',', '.'));
+    // US/Global Standard: 1,200.50
+    else if (lastPoint > -1 && lastComma > -1 && lastComma < lastPoint) {
+        clean = clean.replace(/,/g, '');
     }
-
-    if (lastDot > -1) {
-        // Only dot: 15.000 or 15.50 (Ambiguous)
-        // Heuristic: If dot is 3 digits from end, it's almost certainly thousand separator in TR Context (Beymen, Zara etc)
+    // Single Separator: "1.299" (Usually TR thousand) or "1,299" (US thousand) or "12.99" (Price)
+    // Heuristic: Inditex TR uses dot for thousands (1.299 TL) and comma for decimals (499,99 TL)
+    else if (lastPoint > -1) {
+        // If "1.299" -> It's likely 1299 TL, not 1.299 TL (too cheap)
+        // If "12.99" -> It's likely 12.99 TL
         const parts = clean.split('.');
         if (parts[parts.length - 1].length === 3) {
-            // 15.000 -> 15000
-            return parseFloat(clean.replace(/\./g, ''));
+            // Assume Thousand separator (1.299)
+            clean = clean.replace(/\./g, '');
         }
-        // 15.50 -> 15.5
-        return parseFloat(clean);
+    }
+    else if (lastComma > -1) {
+        // "499,99" -> Decimal
+        clean = clean.replace(',', '.');
     }
 
-    return parseFloat(clean) || 0;
+    const val = parseFloat(clean);
+    return isNaN(val) ? 0 : val;
 }
 
 function detectCategory(title) {
     if (!title) return "Genel";
     const t = title.toLowerCase();
     if (t.includes("elbise")) return "Elbise";
-    if (t.includes("pantolon")) return "Alt Giyim";
-    if (t.includes("ceket") || t.includes("mont")) return "Dış Giyim";
-    if (t.includes("ayakkabi") || t.includes("sneaker")) return "Ayakkabı";
+    if (t.includes("pantolon") || t.includes("jean")) return "Alt Giyim";
+    if (t.includes("ceket") || t.includes("mont") || t.includes("kaban")) return "Dış Giyim";
+    if (t.includes("ayakkabi") || t.includes("sneaker") || t.includes("bot")) return "Ayakkabı";
+    if (t.includes("çanta")) return "Çanta";
     return "Moda";
 }
 
 function detectGender(url, title) {
     const text = (url + " " + title).toLowerCase();
+    const femaleKeywords = ["kadin", "woman", "elbise", "etek", "bluz", "topuklu", "sütyen", "büstiyer", "çanta"];
+    const maleKeywords = ["erkek", "man", "damatlık", "boxer", "ceket takımı"];
 
-    // 1. Female Keywords (Turkish & English)
-    const femaleKeywords = [
-        "kadun", "kadin", "woman", "female", "elbise", "etek", "bluz", "tunik", "tayt", "sütyen", "sutyen",
-        "bra", "topuklu", "mini", "midi", "pudra", "floral", "şifon", "dantel", "fisto", "vual", "volan",
-        "crop", "bustiyer", "büstiyer", "askılı", "gecelik", "sabahlık", "küpe", "earring", "çanta", "bag",
-        "makyaj", "makeup", "ruj", "cilt bakımı", "eşarp", "şal", "fular", "lady", "jane", "cindy", "linda"
-    ];
-
-    // 2. Male Keywords (Turkish & English)
-    const maleKeywords = [
-        "erkek", "man", "male", "damatlik", "damatlık", "smokin", "sakalli", "sakallı", "jilet", "traş", "tras",
-        "berber", "beard", "boxer", "sliper", "tesbih", "nargile", "gentleman", "boy", "oğlan", "yakışıklı",
-        "james", "marcus", "martin", "jake", "jason", "serra", "adriano", "hunter"
-    ];
-
-    // 3. Logic: Check for direct mentions first
     if (femaleKeywords.some(k => text.includes(k))) return "female";
     if (maleKeywords.some(k => text.includes(k))) return "male";
 
-    // 4. Special Breadcrumb logic (especially for Zara/Beymen)
-    if (url.includes("/tr/kadin") || url.includes("/tr/woman") || url.includes("-kadin-")) return "female";
-    if (url.includes("/tr/erkek") || url.includes("/tr/man") || url.includes("-erkek-")) return "male";
+    // Breadcrumb URL check
+    if (url.includes("/tr/kadin") || url.includes("/woman")) return "female";
+    if (url.includes("/tr/erkek") || url.includes("/man")) return "male";
 
     return "unisex";
 }

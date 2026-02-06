@@ -1,7 +1,8 @@
 const prisma = require('../config/db');
 const { scrapeProduct } = require('./scraper/index');
-const { handlePriceDrop, handleStockAlert, handleTargetPriceAlert } = require('./notification');
+// Notification logic moved to Queue Worker to decouple
 const { runArchiving } = require('./archive');
+const queueService = require('./queue/QueueService');
 
 // Improve Performance: Check every 5 minutes instead of 30 for faster updates
 const CHECK_INTERVAL_MS = 1000 * 60 * 5;
@@ -19,9 +20,11 @@ async function startPriceTracker() {
         await checkAllProducts();
     }, CHECK_INTERVAL_MS);
 
-    // Schedule Archiving
+    // Schedule Archiving & Hygiene
     setInterval(async () => {
         await runArchiving();
+        const { checkZombies } = require('./monitor/HygieneService');
+        await checkZombies();
     }, ARCHIVE_INTERVAL_MS);
 }
 
@@ -54,7 +57,9 @@ async function checkSingleProduct(product) {
         const newData = await scrapeProduct(product.url);
 
         let priceChanged = newData.currentPrice !== product.currentPrice;
-        let stockChanged = newData.inStock !== product.inStock;
+
+        // Stock logic remains simple, no need for complex queue yet unless requested
+        let stockChanged = (!product.inStock && newData.inStock);
 
         if (priceChanged || stockChanged) {
             console.log(`Update Detected for ${product.title}`);
@@ -69,17 +74,21 @@ async function checkSingleProduct(product) {
                 });
             }
 
-            // 2. Analyze & Notify
-            if (!product.inStock && newData.inStock) {
-                await handleStockAlert(product, newData.currentPrice);
-            }
-
+            // 2. Queue Notification Logic (Event-Driven)
             if (newData.currentPrice < product.currentPrice) {
-                await handlePriceDrop(product, product.currentPrice, newData.currentPrice);
-            }
-
-            if (product.targetPrice && newData.currentPrice <= product.targetPrice && (product.currentPrice > product.targetPrice || !product.currentPrice)) {
-                await handleTargetPriceAlert(product, newData.currentPrice);
+                // OLD: await handlePriceDrop(product, product.currentPrice, newData.currentPrice);
+                // NEW: Queue it!
+                queueService.add('PRICE_DETECTED', {
+                    product: product,
+                    currentPrice: product.currentPrice,
+                    newPrice: newData.currentPrice
+                });
+            } else if (stockChanged) {
+                // For now stock alerts can also be queued or kept direct. Queuing is safer.
+                // queueService.add('STOCK_DETECTED', ...);
+                // Keeping simple for now as per plan focus on Price
+                const { handleStockAlert } = require('./notification');
+                await handleStockAlert(product, newData.currentPrice);
             }
 
             // 3. Update Product State
@@ -101,17 +110,27 @@ async function checkSingleProduct(product) {
                 updateData.lastPriceDropAt = new Date();
             }
 
-            // 4. Comparison Check (Is there a better price elsewhere?)
-            // Moved to separate async task to not block main update
+            // 4. Comparison Check
             updateAlternatives(product, newData.currentPrice);
 
             await prisma.product.update({
                 where: { id: product.id },
-                data: updateData
+                data: {
+                    ...updateData,
+                    scanCount: { increment: 1 } // 🔥 Metric Update
+                }
             });
 
         } else {
             console.log(`✅ Değişiklik yok: ${product.currentPrice} TL - ${product.title}`);
+            // Even if no price change, we scanned it. value++
+            await prisma.product.update({
+                where: { id: product.id },
+                data: {
+                    updatedAt: new Date(),
+                    scanCount: { increment: 1 }
+                }
+            });
         }
 
         // Adaptive delay based on concurrency

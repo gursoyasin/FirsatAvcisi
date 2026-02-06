@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 @MainActor
@@ -35,6 +36,7 @@ struct FirsatAvcisiApp: App {
                     }
                 }
         }
+        .modelContainer(for: [SDProduct.self, SDNotification.self])
     }
 }
 

@@ -447,6 +447,61 @@ router.post('/products/barcode', async (req, res) => {
     }
 });
 
+// Notifications Endpoint
+router.get('/notifications', async (req, res) => {
+    try {
+        // Fetch last 20 alerts
+        const alerts = await prisma.alertLog.findMany({
+            orderBy: { sentAt: 'desc' },
+            take: 20,
+            include: { product: { select: { title: true, imageUrl: true } } }
+        });
+        res.json(alerts);
+    } catch (error) {
+        console.error("Notification Fetch Error:", error);
+        res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+});
+
+// Dashboard Stats Endpoint (Waiting Ring)
+router.get('/stats/summary', async (req, res) => {
+    try {
+        // Calculate average "waiting time" based on products that actually had a price drop
+        // Or if data is sparse, use a smart heuristic.
+        // Heuristic: Avg time between 'createdAt' and 'lastPriceDropAt' for items with drops.
+
+        const droppedProducts = await prisma.product.findMany({
+            where: {
+                lastPriceDropAt: { not: null },
+                isSystem: true
+            },
+            select: { createdAt: true, lastPriceDropAt: true },
+            take: 100
+        });
+
+        let avgDays = 5; // Default fallback
+
+        if (droppedProducts.length > 0) {
+            let totalDays = 0;
+            droppedProducts.forEach(p => {
+                const diffTime = Math.abs(new Date(p.lastPriceDropAt) - new Date(p.createdAt));
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                totalDays += diffDays;
+            });
+            avgDays = Math.max(1, Math.round(totalDays / droppedProducts.length));
+        }
+
+        console.log(`📊 Calculated Average Waiting Time: ${avgDays} days (Sample: ${droppedProducts.length})`);
+
+        res.json({
+            averageWaitingTime: avgDays
+        });
+    } catch (error) {
+        console.error("Stats Error:", error);
+        res.json({ averageWaitingTime: 5 }); // Fail safe defaults
+    }
+});
+
 // Register Device Token
 router.post('/devices/register', async (req, res) => {
     try {

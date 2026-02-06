@@ -358,9 +358,27 @@ router.get('/:id', async (req, res) => {
             where: { id: parseInt(req.params.id) },
             include: { history: true }
         });
+
         if (!product) return res.status(404).json({ error: "Not found" });
-        res.json(polishProduct(product));
-    } catch (e) { res.status(500).json({ error: "Failed" }); }
+
+        // 🧠 Phase 1: Inject Analysis (Strategy)
+        const { analyze } = require('../services/analysis/PriceAnalysisService'); // Require locally to ensure load order
+        const strategyReport = await analyze(product);
+        const timeSaved = require('../services/analysis/PriceAnalysisService').calculateTimeSaved(product.scanCount);
+
+        const response = {
+            ...polishProduct(product),
+            strategy: strategyReport,
+            metrics: {
+                timeSaved: timeSaved
+            }
+        };
+
+        res.json(response);
+    } catch (e) {
+        console.error("Product Detail Error:", e);
+        res.status(500).json({ error: "Failed" });
+    }
 });
 
 module.exports = router;

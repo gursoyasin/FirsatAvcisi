@@ -105,6 +105,12 @@ struct ProductDetailView: View {
                         .offset(y: -30) // Overlap effect
                         .padding(.bottom, -30)
                         
+                        // STRATEGY ADVICE BADGE (NEW)
+                        if let strategy = viewModel.product.strategy {
+                            AdviceBadge(strategy: strategy)
+                                .padding(.horizontal)
+                        }
+
                             // AI Analysis Card (Ultra Feature)
                             AnalysisCard(analysis: viewModel.analysisResult, isLoading: viewModel.isAnalyzeLoading)
                                 .padding(.horizontal)
@@ -410,4 +416,74 @@ struct VisualEffectBlur: UIViewRepresentable {
         return UIVisualEffectView(effect: UIBlurEffect(style: blurStyle))
     }
     func updateUIView(_ uiView: UIVisualEffectView, context: Context) {}
+}
+
+struct AdviceBadge: View {
+    let strategy: StrategyReport
+    
+    var color: Color {
+        switch strategy.advice {
+        case "BUY": return .green
+        case "WAIT": return .orange
+        default: return .gray
+        }
+    }
+    
+    var icon: String {
+        switch strategy.advice {
+        case "BUY": return "cart.badge.plus.fill"
+        case "WAIT": return "hourglass"
+        default: return "questionmark.circle"
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.2))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundColor(color)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(strategy.advice == "BUY" ? "FIRSAT: ALINABİLİR" : "TAVSİYE: BEKLE")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+                    .tracking(0.5)
+                
+                Text(strategy.reason)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+            }
+            
+            Spacer()
+            
+            Text("\(strategy.confidence)%")
+                .font(.caption)
+                .padding(6)
+                .background(Color(uiColor: .systemBackground))
+                .clipShape(Capsule())
+                .shadow(radius: 1)
+        }
+        .padding()
+        .background(
+            ZStack {
+                Color(uiColor: .secondarySystemGroupedBackground)
+                color.opacity(0.05)
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
+        .cornerRadius(16)
+        .shadow(color: color.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
 }

@@ -22,6 +22,15 @@ struct AlertLog: Codable, Identifiable {
         return "\(diff / 86400)g önce"
     }
     
+    var title: String {
+        switch type {
+        case "PRICE_DROP": return "Fiyat Düştü!"
+        case "STOCK_ALERT": return "Stok Alarmı"
+        case "TARGET_PRICE": return "Hedef Fiyat"
+        default: return "Bildirim"
+        }
+    }
+
     var iconName: String {
         switch type {
         case "PRICE_DROP": return "arrow.down.circle.fill"

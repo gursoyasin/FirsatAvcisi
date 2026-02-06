@@ -52,27 +52,55 @@ async function sendPushNotification(userEmail, title, message, data = {}) {
 }
 
 async function handlePriceDrop(product, oldPrice, newPrice) {
+    // 0. Idempotency Check (Prevent Spam)
+    if (product.lastNotifiedPrice && product.lastNotifiedPrice === newPrice) {
+        console.log(`🔕 Idempotency: Already notified for ${newPrice} TL. Skipping.`);
+        return;
+    }
+
     const discount = oldPrice - newPrice;
     const percentage = Math.round((discount / oldPrice) * 100);
 
     // Filter out negligible drops (less than 1%)
     if (percentage <= 0) return;
 
-    const message = `🔥 İndirim! ${product.title} fiyatı %${percentage} düştü! (${newPrice} TL)`;
+    // 🧠 SMART STRATEGY INJECTION
+    const { analyze } = require('./analysis/PriceAnalysisService');
+    const analysis = await analyze(product);
 
-    console.log(`🚨 ALERT: ${message}`);
+    let title = "🔥 İndirim!";
+    let body = `${product.title} fiyatı %${percentage} düştü! (${newPrice} TL)`;
+
+    if (analysis.advice === "BUY") {
+        title = "🚨 DİP FİYAT ALARMI!";
+        body = `Tam zamanı! ${product.title} tarihi dip seviyesinde (%${percentage} indirim).`;
+    } else if (analysis.stats && analysis.stats.avgPrice && newPrice < analysis.stats.avgPrice) {
+        title = "📉 Ortalamanın Altında";
+        body = `${product.title} iyi bir fiyata düştü (%${percentage}).`;
+    }
+
+    console.log(`🚨 ALERT: ${title} - ${body}`);
 
     // 1. Log to DB
     await prisma.alertLog.create({
         data: {
             productId: product.id,
-            message: message,
+            message: body,
             type: 'PRICE_DROP'
         }
     });
 
     // 2. Send Push to User's devices
-    await sendPushNotification(product.userEmail, "Fiyat Düştü! 📉", message, { productId: String(product.id) });
+    await sendPushNotification(product.userEmail, title, body, {
+        productId: String(product.id),
+        strategy: analysis.advice
+    });
+
+    // 3. Update Idempotency Key
+    await prisma.product.update({
+        where: { id: product.id },
+        data: { lastNotifiedPrice: newPrice }
+    });
 }
 
 async function handleStockAlert(product, currentPrice) {

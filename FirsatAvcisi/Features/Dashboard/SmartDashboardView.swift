@@ -12,6 +12,7 @@ struct SmartDashboardView: View {
     @State private var gradientEnd = UnitPoint(x: 0, y: 2)
     @State private var showAddSheet = false // Magic Add Sheet
     @State private var showNotifications = false
+    @State private var showProfile = false
 
     var body: some View {
         NavigationView {
@@ -43,15 +44,25 @@ struct SmartDashboardView: View {
                             
                             Spacer()
                             
-                            // Bell Button
-                            Button(action: { showNotifications = true }) {
-                                Image(systemName: "bell.badge.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.primary)
-                                    .padding(12)
-                                    .background(.ultraThinMaterial)
-                                    .clipShape(Circle())
-                                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                            // Profile & Bell Buttons
+                            HStack(spacing: 12) {
+                                Button(action: { showProfile = true }) {
+                                    Image(systemName: "person.crop.circle")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.primary)
+                                        .padding(10)
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(Circle())
+                                }
+                                
+                                Button(action: { showNotifications = true }) {
+                                    Image(systemName: "bell.badge.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.primary)
+                                        .padding(10)
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(Circle())
+                                }
                             }
                         }
                         .padding(.top, 20)
@@ -251,6 +262,9 @@ struct SmartDashboardView: View {
         }
         .sheet(isPresented: $showNotifications) {
             NotificationListView()
+        }
+        .sheet(isPresented: $showProfile) {
+            ProfileView()
         }
     }
 }

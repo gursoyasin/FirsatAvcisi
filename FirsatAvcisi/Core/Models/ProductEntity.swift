@@ -132,7 +132,9 @@ class ProductEntity {
             bestAlternativeSource: bestAlternativeSource,
             sellers: sellers?.map { $0.toSeller() },
             variants: variants?.map { $0.toProductVariant() },
-            smartAnalysis: smartAnalysis
+            smartAnalysis: smartAnalysis,
+            strategy: nil,
+            metrics: nil
         )
     }
 }

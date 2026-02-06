@@ -1,20 +1,26 @@
 import SwiftUI
 import Combine
-
-// MARK: - Models
-// ProductSummary moved to Core/Models/AlertLog.swift
+import SwiftData
 
 // MARK: - ViewModel
 class NotificationViewModel: ObservableObject {
-    @Published var alerts: [AlertLog] = []
     @Published var isLoading = false
+    // Alerts will now primarily come from SwiftData
     
-    func fetchNotifications() async {
+    func fetchNotifications(modelContext: ModelContext) async {
         await MainActor.run { isLoading = true }
         do {
             let fetched = try await APIService.shared.fetchNotifications()
             await MainActor.run {
-                self.alerts = fetched
+                // Sync Logic: Save fetched to SwiftData
+                for alert in fetched {
+                    // Check if exists
+                    // For V1 simple logic: Just append or ignore duplicates
+                    // In a real app we'd map AlertLog to SDNotification
+                    
+                    let newNotif = SDNotification(title: alert.title, body: alert.message, type: "price_drop", relatedProductId: alert.productId)
+                    modelContext.insert(newNotif)
+                }
                 self.isLoading = false
             }
         } catch {
@@ -26,6 +32,8 @@ class NotificationViewModel: ObservableObject {
 
 // MARK: - View
 struct NotificationListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \SDNotification.date, order: .reverse) private var notifications: [SDNotification]
     @StateObject private var viewModel = NotificationViewModel()
     @Environment(\.dismiss) var dismiss
     
@@ -33,57 +41,42 @@ struct NotificationListView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    if viewModel.alerts.isEmpty && !viewModel.isLoading {
+                    if notifications.isEmpty && !viewModel.isLoading {
                         VStack(spacing: 20) {
                             Image(systemName: "bell.slash.circle.fill")
                                 .font(.system(size: 60))
                                 .foregroundColor(.secondary.opacity(0.3))
                                 .padding(.top, 60)
-                            Text(LocalizedStringKey("notification.empty"))
+                            Text("Henüz bir bildirim yok")
                                 .font(.system(size: 16, weight: .medium, design: .rounded))
                                 .foregroundColor(.secondary)
                         }
                     } else {
-                        ForEach(viewModel.alerts) { alert in
+                        ForEach(notifications) { notification in
                             HStack(alignment: .top, spacing: 16) {
-                                // Premium Icon/Image Container
+                                // Icon
                                 ZStack {
-                                    if let url = alert.product?.imageUrl, let u = URL(string: url) {
-                                        AsyncImage(url: u) { i in
-                                            i.resizable().aspectRatio(contentMode: .fill)
-                                        } placeholder: {
-                                            Color(uiColor: .secondarySystemBackground)
-                                        }
-                                        .frame(width: 56, height: 56)
-                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                    } else {
-                                        Circle()
-                                            .fill(alert.color.opacity(0.15))
-                                            .frame(width: 50, height: 50)
-                                        
-                                        Image(systemName: alert.iconName)
-                                            .font(.system(size: 20, weight: .semibold))
-                                            .foregroundColor(alert.color)
-                                    }
+                                    Circle()
+                                        .fill(Color.blue.opacity(0.15))
+                                        .frame(width: 50, height: 50)
                                     
-                                    // New Dot
-                                    if alert.timeAgo.contains("saniye") || alert.timeAgo.contains("dakika") {
-                                        Circle()
-                                            .fill(Color.blue)
-                                            .frame(width: 10, height: 10)
-                                            .offset(x: 26, y: -26)
-                                            .overlay(Circle().stroke(Color(uiColor: .systemBackground), lineWidth: 2).offset(x: 26, y: -26))
-                                    }
+                                    Image(systemName: notification.type == "price_drop" ? "arrow.down.circle.fill" : "bell.fill")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundColor(.blue)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text(alert.message)
-                                        .font(.system(size: 15, weight: .medium))
+                                    Text(notification.title)
+                                        .font(.system(size: 15, weight: .bold)) // Bolder title
                                         .foregroundColor(.primary)
+                                    
+                                    Text(notification.body)
+                                        .font(.system(size: 14, weight: .regular))
+                                        .foregroundColor(.secondary)
                                         .lineLimit(3)
                                         .fixedSize(horizontal: false, vertical: true)
                                     
-                                    Text(alert.timeAgo)
+                                    Text(notification.date.formatted(.relative(presentation: .named)))
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundColor(.secondary)
                                 }
@@ -101,19 +94,19 @@ struct NotificationListView: View {
                 .padding(.top, 10)
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle(Text(LocalizedStringKey("notification.title")))
+            .navigationTitle("Bildirimler")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
-                        Text(LocalizedStringKey("common.close"))
+                        Text("Kapat")
                     }
                 }
             }
             .task {
-                await viewModel.fetchNotifications()
+                await viewModel.fetchNotifications(modelContext: modelContext)
             }
             .refreshable {
-                await viewModel.fetchNotifications()
+                await viewModel.fetchNotifications(modelContext: modelContext)
             }
         }
     }

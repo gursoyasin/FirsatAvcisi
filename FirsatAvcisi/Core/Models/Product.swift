@@ -29,6 +29,10 @@ struct Product: Identifiable, Codable {
     
     // Delici Features Data
     let smartAnalysis: SmartAnalysis?
+    
+    // Strategy & Metrics
+    let strategy: StrategyReport?
+    let metrics: ProductMetrics?
 }
 
 struct SmartAnalysis: Codable {
@@ -92,3 +96,28 @@ struct CollectionCount: Codable {
     let products: Int
 }
 
+
+// MARK: - Strategy & Metrics
+struct StrategyReport: Codable {
+    let advice: String // BUY, WAIT
+    let confidence: Int
+    let reason: String
+    let stats: StrategyStats?
+}
+
+struct StrategyStats: Codable {
+    let minPrice: Double?
+    let maxPrice: Double?
+    let avgPrice: Double?
+    let totalScans: Int?
+    let daysTracked: Int?
+}
+
+struct ProductMetrics: Codable {
+    let timeSaved: TimeSavedMetric?
+}
+
+struct TimeSavedMetric: Codable {
+    let minutesSaved: Int
+    let message: String
+}

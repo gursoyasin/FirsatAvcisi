@@ -152,7 +152,8 @@ class SmartDashboardViewModel: ObservableObject {
                 smartScore: 0.85,
                 category: "Ceket",
                 bestAlternativePrice: nil, bestAlternativeSource: nil, sellers: nil, variants: nil,
-                smartAnalysis: nil
+                smartAnalysis: nil,
+                strategy: nil, metrics: nil
             ),
             Product(
                 id: 102,
@@ -168,7 +169,8 @@ class SmartDashboardViewModel: ObservableObject {
                 smartScore: 0.60,
                 category: "Pantolon",
                 bestAlternativePrice: nil, bestAlternativeSource: nil, sellers: nil, variants: nil,
-                smartAnalysis: nil
+                smartAnalysis: nil,
+                strategy: nil, metrics: nil
             ),
             Product(
                 id: 103,
@@ -184,7 +186,8 @@ class SmartDashboardViewModel: ObservableObject {
                 smartScore: 0.92,
                 category: "Dış Giyim",
                 bestAlternativePrice: nil, bestAlternativeSource: nil, sellers: nil, variants: nil,
-                smartAnalysis: nil
+                smartAnalysis: nil,
+                strategy: nil, metrics: nil
             )
         ]
     }
@@ -204,7 +207,8 @@ class SmartDashboardViewModel: ObservableObject {
             smartScore: 0.95,
             category: "Sweatshirt",
             bestAlternativePrice: nil, bestAlternativeSource: nil, sellers: nil, variants: nil,
-            smartAnalysis: nil
+            smartAnalysis: nil,
+            strategy: nil, metrics: nil
         )
     }
     
